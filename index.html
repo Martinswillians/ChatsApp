@@ -46,6 +46,7 @@
     justify-content: center;
     height: 100vh;
     background: var(--bg-sidebar);
+    padding: 20px;
     gap: 0;
   }
   .auth-logo {
@@ -65,6 +66,7 @@
     letter-spacing: 2px;
     color: var(--text-primary);
     margin-bottom: 8px;
+    text-align: center;
   }
   #auth-screen p {
     color: var(--text-secondary);
@@ -78,7 +80,8 @@
     background: var(--bg-chat);
     border-radius: 12px;
     padding: 32px;
-    width: 360px;
+    width: 100%;
+    max-width: 360px;
     display: flex;
     flex-direction: column;
     gap: 16px;
@@ -168,6 +171,7 @@
     display: flex;
     flex-direction: column;
     border-right: 1px solid var(--border);
+    flex-shrink: 0;
   }
   .sidebar-header {
     display: flex;
@@ -267,13 +271,15 @@
     z-index: 1000;
     align-items: center;
     justify-content: center;
+    padding: 20px;
   }
   .modal-overlay.visible { display: flex; }
   .modal {
     background: var(--bg-sidebar);
     border-radius: 12px;
     padding: 28px;
-    width: 360px;
+    width: 100%;
+    max-width: 360px;
     display: flex;
     flex-direction: column;
     gap: 16px;
@@ -307,9 +313,10 @@
     justify-content: center;
     gap: 16px;
     color: var(--text-secondary);
+    padding: 20px;
   }
   .empty-state svg { width: 80px; height: 80px; opacity: 0.3; }
-  .empty-state h2 { font-size: 22px; font-weight: 300; color: var(--text-primary); }
+  .empty-state h2 { font-size: 22px; font-weight: 300; color: var(--text-primary); text-align: center; }
   .empty-state p { font-size: 14px; max-width: 320px; text-align: center; line-height: 1.6; }
 
   #chat-view { display: none; flex: 1; flex-direction: column; height: 100%; }
@@ -323,10 +330,17 @@
     gap: 12px;
     z-index: 10;
   }
-  .chat-header-info { flex: 1; }
-  .chat-header-name { font-size: 16px; font-weight: 600; }
+  
+  /* Botão Voltar Mobile */
+  .back-btn {
+    display: none;
+  }
+
+  .chat-header-info { flex: 1; min-width: 0; }
+  .chat-header-name { font-size: 16px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .chat-header-status { font-size: 13px; color: var(--primary); margin-top: 1px; }
   .chat-header-actions { display: flex; gap: 4px; }
+  
   .video-btn {
     background: var(--primary);
     border: none;
@@ -353,19 +367,9 @@
   }
   #messages-container::-webkit-scrollbar { width: 6px; }
   #messages-container::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-  .msg-day-label {
-    text-align: center;
-    margin: 12px 0;
-  }
-  .msg-day-label span {
-    background: var(--bg-input);
-    color: var(--text-secondary);
-    font-size: 12px;
-    padding: 4px 12px;
-    border-radius: 8px;
-  }
+  
   .message {
-    max-width: 65%;
+    max-width: 75%;
     padding: 8px 12px;
     border-radius: 8px;
     position: relative;
@@ -439,9 +443,11 @@
     color: white; cursor: pointer;
     display: flex; align-items: center; justify-content: center;
     transition: background 0.2s;
+    flex-shrink: 0;
   }
   .send-btn:hover { background: var(--primary-dark); }
   .send-btn:active { transform: scale(0.95); }
+  
   .emoji-panel {
     display: none;
     position: absolute;
@@ -592,17 +598,71 @@
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 
+  /* ===== RESPONSIVIDADE MOBILE ===== */
   @media (max-width: 768px) {
-    #sidebar { width: 100%; }
-    #chat-area { display: none; }
-    #sidebar.hidden { display: none; }
-    #chat-area.mobile-visible { display: flex; }
+    #sidebar { 
+      width: 100%; 
+      min-width: 100%;
+    }
+    
+    #chat-area { 
+      display: none; 
+      width: 100%;
+    }
+    
+    /* Quando o chat estiver ativo no mobile, escondemos a sidebar e mostramos o chat */
+    #app.chat-active #sidebar { 
+      display: none; 
+    }
+    #app.chat-active #chat-area { 
+      display: flex; 
+    }
+    
+    /* Ativa o botão de voltar no header do chat */
+    .back-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      cursor: pointer;
+      padding: 4px;
+      margin-right: 4px;
+    }
+    
+    /* Ajustes finos do header para telas menores */
+    .chat-header {
+      padding: 10px 8px;
+      gap: 8px;
+    }
+    .video-btn {
+      padding: 8px 12px;
+      font-size: 12px;
+    }
+    .video-btn span {
+      display: none; /* Esconde o texto "Videochamada" no mobile para poupar espaço */
+    }
+    .message {
+      max-width: 85%; /* Mensagens ocupam mais espaço horizontal em telas pequenas */
+    }
+    
+    .local-video-pip {
+      width: 90px;
+      height: 135px;
+      bottom: 15px;
+      right: 15px;
+    }
+    .call-btn {
+      width: 54px;
+      height: 54px;
+      font-size: 22px;
+    }
   }
 </style>
 </head>
 <body>
 
-<!-- AUTH SCREEN -->
 <div id="auth-screen">
   <div class="auth-logo">
     <svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
@@ -646,9 +706,7 @@
   </div>
 </div>
 
-<!-- MAIN APP -->
 <div id="app">
-  <!-- SIDEBAR -->
   <div id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-header-left">
@@ -677,7 +735,6 @@
     </div>
   </div>
 
-  <!-- CHAT AREA -->
   <div id="chat-area">
     <div class="chat-bg"></div>
     <div class="empty-state" id="empty-state">
@@ -690,6 +747,9 @@
 
     <div id="chat-view">
       <div class="chat-header">
+        <button class="back-btn" onclick="closeChatMobile()" title="Voltar para contatos">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+        </button>
         <div class="contact-avatar" id="chat-header-avatar" style="width:40px;height:40px;font-size:20px"></div>
         <div class="chat-header-info">
           <div class="chat-header-name" id="chat-header-name"></div>
@@ -698,7 +758,7 @@
         <div class="chat-header-actions">
           <button class="video-btn" onclick="startVideoCall()">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/></svg>
-            Videochamada
+            <span>Videochamada</span>
           </button>
           <button class="icon-btn" onclick="clearChat()">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
@@ -724,7 +784,6 @@
   </div>
 </div>
 
-<!-- ADD CONTACT MODAL -->
 <div class="modal-overlay" id="add-contact-modal">
   <div class="modal" style="position:relative">
     <button class="modal-close" onclick="closeAddContact()">✕</button>
@@ -736,7 +795,6 @@
   </div>
 </div>
 
-<!-- VIDEO CALL UI -->
 <div id="video-call">
   <div class="video-main">
     <div class="call-timer" id="call-timer">00:00</div>
@@ -765,7 +823,6 @@
   </div>
 </div>
 
-<!-- INCOMING CALL -->
 <div class="incoming-call" id="incoming-call">
   <div class="incoming-avatar" id="incoming-avatar" style="background:#333"></div>
   <div class="incoming-name" id="incoming-name">Mamãe</div>
@@ -786,7 +843,6 @@
   </div>
 </div>
 
-<!-- Firebase + App Logic -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import {
@@ -799,7 +855,6 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
 // =================== FIREBASE CONFIG ===================
-// 🔥 SUBSTITUA COM SUAS CREDENCIAIS DO FIREBASE
 const firebaseConfig = {
   apiKey: "AIzaSyClCdBh60Y4p3mZcgFA2sl7tnuSbaBWIYA",
   authDomain: "chatsapp-1e307.firebaseapp.com",
@@ -811,7 +866,6 @@ const firebaseConfig = {
 };
 
 // =================== DEMO MODE ===================
-// Se não tiver Firebase configurado, o app roda em modo demo local
 let DEMO_MODE = firebaseConfig.apiKey.includes("DEMO");
 
 const app = DEMO_MODE ? null : initializeApp(firebaseConfig);
@@ -898,7 +952,6 @@ window.registerUser = async () => {
       createdAt: serverTimestamp()
     };
     await set(ref(db, `users/${cred.user.uid}`), userData);
-    // Salva índice de e-mail para busca sem precisar ler todos os usuários
     const emailKey = email.toLowerCase().replace(/\./g, ',');
     await set(ref(db, `email_index/${emailKey}`), cred.user.uid);
   } catch(e) {
@@ -928,7 +981,7 @@ function enterDemoMode(name) {
 function exitDemoMode() {
   currentUser = null;
   currentContact = null;
-  document.getElementById('app').classList.remove('visible');
+  document.getElementById('app').classList.remove('visible', 'chat-active');
   document.getElementById('auth-screen').style.display = 'flex';
   document.getElementById('chat-view').classList.remove('visible');
   document.getElementById('empty-state').style.display = '';
@@ -950,7 +1003,7 @@ if (!DEMO_MODE) {
       onDisconnect(ref(db, `users/${user.uid}/online`)).set(false);
       showApp();
     } else {
-      document.getElementById('app').classList.remove('visible');
+      document.getElementById('app').classList.remove('visible', 'chat-active');
       document.getElementById('auth-screen').style.display = 'flex';
     }
   });
@@ -974,16 +1027,13 @@ function showApp() {
 }
 
 // =================== CONTACTS ===================
-// Aceita automaticamente solicitações de contato recebidas
 function listenContactRequests() {
   if (!currentUser) return;
   const reqRef = ref(db, `contact_requests/${currentUser.uid}`);
   onChildAdded(reqRef, async (snap) => {
     const requesterId = snap.key;
     const requesterData = snap.val();
-    // Adiciona o solicitante como contato
     await set(ref(db, `users/${currentUser.uid}/contacts/${requesterId}`), true);
-    // Remove a solicitação processada
     await remove(ref(db, `contact_requests/${currentUser.uid}/${requesterId}`));
     showNotif(requesterData.emoji || '👤', requesterData.name || 'Familiar', 'te adicionou como contato! 💚');
   });
@@ -1022,6 +1072,7 @@ function renderContacts(list) {
     const item = document.createElement('div');
     item.className = 'contact-item';
     item.dataset.uid = uid;
+    if (currentContact && currentContact.uid === uid) item.classList.add('active');
     item.innerHTML = `
       <div class="contact-avatar" style="background:${c.color||'#555'};font-size:22px">
         ${c.emoji||'👤'}
@@ -1054,6 +1105,7 @@ window.showAddContact = () => {
   document.getElementById('add-contact-error').textContent = '';
 };
 window.closeAddContact = () => {
+  document.getElementById('add-contact-modal').classList.remove('remove');
   document.getElementById('add-contact-modal').classList.remove('visible');
 };
 
@@ -1083,7 +1135,6 @@ window.addContact = async () => {
   err.style.color = '#8696A0';
 
   try {
-    // Busca pelo índice de e-mail (sem precisar ler todos os usuários)
     const emailKey = email.toLowerCase().replace(/\./g, ',');
     const idxSnap = await get(ref(db, `email_index/${emailKey}`));
 
@@ -1100,7 +1151,6 @@ window.addContact = async () => {
       return;
     }
 
-    // Verifica se já é contato
     const alreadySnap = await get(ref(db, `users/${currentUser.uid}/contacts/${foundId}`));
     if (alreadySnap.exists()) {
       err.textContent = '⚠️ Este familiar já está na sua lista';
@@ -1108,14 +1158,11 @@ window.addContact = async () => {
       return;
     }
 
-    // Busca dados do usuário encontrado (precisa de permissão de leitura em /users)
     const userSnap = await get(ref(db, `users/${foundId}`));
     const foundUser = userSnap.exists() ? userSnap.val() : { name: email.split('@')[0], emoji: '👤', color: '#555' };
 
-    // Adiciona contato para o usuário atual
     await set(ref(db, `users/${currentUser.uid}/contacts/${foundId}`), true);
 
-    // Envia solicitação para o outro usuário (escrita em /contact_requests, aberta nas regras)
     await set(ref(db, `contact_requests/${foundId}/${currentUser.uid}`), {
       name: currentUser.displayName,
       emoji: currentUser.emoji || '🦁',
@@ -1125,13 +1172,12 @@ window.addContact = async () => {
     });
 
     err.textContent = '';
-    err.style.color = '#FF4444';
     closeAddContact();
     showNotif(foundUser.emoji || '👤', foundUser.name || email, 'Familiar adicionado! ✅');
   } catch(e) {
     err.style.color = '#FF4444';
     if (e.message && (e.message.includes('Permission denied') || e.message.includes('PERMISSION_DENIED'))) {
-      err.textContent = '⚠️ Permissão negada. Atualize as Regras no Firebase Console (veja README).';
+      err.textContent = '⚠️ Permissão negada.';
     } else {
       err.textContent = '❌ ' + (e.message || 'Erro desconhecido');
     }
@@ -1146,6 +1192,10 @@ function openChat(uid, contact) {
   });
   document.getElementById('empty-state').style.display = 'none';
   document.getElementById('chat-view').classList.add('visible');
+  
+  // Modificação Responsiva: Ativa estado de chat ativo para o Mobile
+  document.getElementById('app').classList.add('chat-active');
+  
   const headerAvatar = document.getElementById('chat-header-avatar');
   headerAvatar.textContent = contact.emoji || '👤';
   headerAvatar.style.background = contact.color || '#555';
@@ -1154,6 +1204,13 @@ function openChat(uid, contact) {
   document.getElementById('chat-header-status').textContent = contact.online ? 'online' : 'offline';
   loadMessages(uid);
 }
+
+// Nova Função Responsiva: Fecha o chat voltando para a lista de contatos no Mobile
+window.closeChatMobile = () => {
+  document.getElementById('app').classList.remove('chat-active');
+  currentContact = null;
+  document.querySelectorAll('.contact-item').forEach(el => el.classList.remove('active'));
+};
 
 function getChatId(a, b) {
   return [a, b].sort().join('_');
@@ -1187,7 +1244,6 @@ function loadMessages(contactId) {
 function getDefaultDemoMessages(contactId) {
   const c = demoContacts[contactId];
   if (!c) return [];
-  const now = new Date();
   return [
     { text: `Oi! Que bom ter você no ChatApp Família! 😊`, senderId: contactId, senderName: c.name, ts: Date.now() - 3600000 },
     { text: `Agora podemos conversar e fazer videochamadas! 📱`, senderId: contactId, senderName: c.name, ts: Date.now() - 1800000 },
@@ -1241,18 +1297,20 @@ window.sendMessage = async () => {
     demoMessages[chatId].push(msg);
     renderMessage(msg);
     scrollBottom();
-    // Simulate reply
     setTimeout(() => {
-      const c = currentContact;
+      if (!currentContact || currentContact.uid !== msg.senderId && chatId !== getChatId('demo-user', currentContact.uid)) return;
+      const c = contacts[currentContact.uid] || demoContacts[currentContact.uid];
       const replies = [
         'Que saudades! 💕', 'Amei! 😍', 'Rs, verdade!', 'Boa ideia! 👍',
         '❤️', 'Claro! Com certeza!', 'Haha que engraçado!', 'Fico feliz em saber!',
         'Que maravilha! 🌟', 'Beijo grande! 😘'
       ];
-      const reply = { text: replies[Math.floor(Math.random()*replies.length)], senderId: c.uid, senderName: c.name, ts: Date.now() };
+      const reply = { text: replies[Math.floor(Math.random()*replies.length)], senderId: c.uid || currentContact.uid, senderName: c.name, ts: Date.now() };
       demoMessages[chatId].push(reply);
-      renderMessage(reply);
-      scrollBottom();
+      if (currentContact && currentContact.uid === c.uid) {
+         renderMessage(reply);
+         scrollBottom();
+      }
       showNotif(c.emoji, c.name, reply.text);
     }, 1500 + Math.random()*2000);
     return;
@@ -1315,13 +1373,11 @@ window.startVideoCall = async () => {
     console.log('Camera não disponível:', e);
     document.getElementById('localVideo').style.display = 'none';
   }
-  // Simulate call connecting after 3s
   setTimeout(() => {
     document.getElementById('call-status-text').textContent = 'Em chamada';
     startCallTimer();
   }, 3000);
   if (DEMO_MODE) {
-    // Notify in demo (simulate receiving)
     setTimeout(() => showNotif(currentContact.emoji, currentContact.name, '📹 Videochamada em andamento'), 500);
   }
 };
@@ -1389,10 +1445,8 @@ window.showProfile = () => showNotif(currentUser.emoji||'🦁', currentUser.disp
 
 </script>
 
-<!-- Demo banner for unconfigured Firebase -->
 <script>
 window.addEventListener('load', () => {
-  const hasRealConfig = !document.querySelector('script[type="module"]').textContent.includes('DEMO_SUBSTITUA');
   if (window.location.hash === '#demo' || document.querySelector('script[type="module"]').textContent.includes('DEMO_SUBSTITUA_COM_SUA_API_KEY')) {
     const banner = document.createElement('div');
     banner.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#1a4731;color:#4ade80;padding:8px 16px;font-size:13px;text-align:center;z-index:9999;display:flex;align-items:center;justify-content:center;gap:8px';
