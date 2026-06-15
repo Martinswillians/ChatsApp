@@ -1172,47 +1172,57 @@ function getChatId(a, b) {
   return [a, b].sort().join('_');
 }
 
-// =================== CHAT CORRIGIDO (SEM DUPLICAÇÃO) ===================
+// =================== CHAT CORRIGIDO (CONTROLE DE DUPLO GATILHO) ===================
+let isChatLoading = false; // Trava de segurança contra cliques duplos no celular
+
 function loadMessages(contactId) {
+  // Se já houver uma carga em andamento para este contato, ignora o segundo gatilho
+  if (isChatLoading) return;
+  isChatLoading = true;
+
   const container = document.getElementById('messages-container');
   
-  // 1. Limpa o container imediatamente para não acumular visualmente
+  // Limpa o container imediatamente
   container.innerHTML = '';
   
-  // 2. Se já existir um ouvinte ativo, desliga ele usando a referência antiga
-  if (unsubscribeMessages && messagesRef) {
-    off(messagesRef, 'child_added', unsubscribeMessages);
-    unsubscribeMessages = null;
+  // Desliga categoricamente qualquer ouvinte anterior que possa ter ficado órfão
+  if (messagesRef) {
+    off(messagesRef, 'child_added');
   }
+  unsubscribeMessages = null;
 
   const chatId = getChatId(currentUser.uid, contactId);
-  // Guardamos a referência atual do nó de mensagens
   messagesRef = ref(db, `messages/${chatId}`);
   
-  // 3. Criamos o novo ouvinte e guardamos a função exata do handler
   const handler = (snap) => {
-    // Evita duplicar mensagens que já foram renderizadas na tela atual
     const msgId = snap.key;
+    // Evita renderizar se o elemento DOM com esse ID já existir na tela
     if (document.getElementById(`msg-${msgId}`)) return;
 
     renderMessage(snap.val(), msgId);
     scrollBottom();
   };
 
-  // Ativa o ouvinte no Firebase
+  // Ativa o ouvinte único no Firebase
   onChildAdded(messagesRef, handler);
-  
-  // Guarda o handler exato para podermos desligar depois
   unsubscribeMessages = handler;
+
+  // Libera a trava após um pequeno intervalo para o celular respirar
+  setTimeout(() => {
+    isChatLoading = false;
+  }, 400);
 }
 
 function renderMessage(msg, msgId) {
   const container = document.getElementById('messages-container');
+  
+  // Verificação dupla no DOM para garantir integridade absoluta no mobile
+  if (document.getElementById(`msg-${msgId}`)) return;
+
   const isSent = msg.senderId === currentUser.uid;
   const div = document.createElement('div');
   const isOnlyEmoji = /^[\p{Emoji}\s]{1,3}$/u.test(msg.text);
   
-  // Adicionamos um ID único na div da mensagem para o validador do 'handler'
   div.id = `msg-${msgId}`;
   div.className = `message ${isSent ? 'sent' : 'received'} ${isOnlyEmoji ? 'msg-emoji' : ''}`;
   
@@ -1235,7 +1245,9 @@ function escapeHtml(t) {
 
 function scrollBottom() {
   const c = document.getElementById('messages-container');
-  setTimeout(() => c.scrollTop = c.scrollHeight, 50);
+  setTimeout(() => {
+    if (c) c.scrollTop = c.scrollHeight;
+  }, 50);
 }
 
 window.sendMessage = async () => {
@@ -1248,15 +1260,13 @@ window.sendMessage = async () => {
     text,
     senderId: currentUser.uid,
     senderName: currentUser.displayName,
-    ts: serverTimestamp() // Usa o timestamp do servidor diretamente
+    ts: serverTimestamp()
   };
 
   const chatId = getChatId(currentUser.uid, currentContact.uid);
   
-  // Envia para o Firebase
   await push(ref(db, `messages/${chatId}`), msg);
   
-  // Atualiza a lista de contatos com a última mensagem
   const horaAtual = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
   await update(ref(db, `users/${currentUser.uid}/contacts/${currentContact.uid}`), { 
     lastMsg: text, 
