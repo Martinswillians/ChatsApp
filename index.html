@@ -598,29 +598,29 @@
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 
-  /* ===== RESPONSIVIDADE MOBILE ===== */
+/* ===== RESPONSIVIDADE MOBILE ===== */
   @media (max-width: 768px) {
     #sidebar { 
-      width: 100%; 
-      min-width: 100%;
+      width: 100% !important; 
+      min-width: 100% !important;
     }
     
     #chat-area { 
-      display: none; 
+      display: none !important; 
       width: 100%;
     }
     
     /* Quando o chat estiver ativo no mobile, escondemos a sidebar e mostramos o chat */
     #app.chat-active #sidebar { 
-      display: none; 
+      display: none !important; 
     }
     #app.chat-active #chat-area { 
-      display: flex; 
+      display: flex !important; 
     }
-    
+      
     /* Ativa o botão de voltar no header do chat */
     .back-btn {
-      display: flex;
+      display: flex !important;
       align-items: center;
       justify-content: center;
       background: none;
@@ -1187,29 +1187,32 @@ window.addContact = async () => {
 // =================== CHAT ===================
 function openChat(uid, contact) {
   currentContact = { uid, ...contact };
+  
   document.querySelectorAll('.contact-item').forEach(el => {
     el.classList.toggle('active', el.dataset.uid === uid);
   });
+  
   document.getElementById('empty-state').style.display = 'none';
   document.getElementById('chat-view').classList.add('visible');
   
-  // Modificação Responsiva: Ativa estado de chat ativo para o Mobile
+  // === RESPONSIVIDADE: Ativa o chat no telemóvel ===
   document.getElementById('app').classList.add('chat-active');
-  
+
   const headerAvatar = document.getElementById('chat-header-avatar');
   headerAvatar.textContent = contact.emoji || '👤';
   headerAvatar.style.background = contact.color || '#555';
-  headerAvatar.style.borderRadius = '50%';
+  headerAvatar.style.borderRadius = '50%'; // Correção do border-radius aqui
+  
   document.getElementById('chat-header-name').textContent = contact.name;
   document.getElementById('chat-header-status').textContent = contact.online ? 'online' : 'offline';
+  
   loadMessages(uid);
 }
 
-// Nova Função Responsiva: Fecha o chat voltando para a lista de contatos no Mobile
+// === NOVA FUNÇÃO PARA FECHAR O CHAT E VOLTAR PARA A LISTA NO MOBILE ===
 window.closeChatMobile = () => {
   document.getElementById('app').classList.remove('chat-active');
   currentContact = null;
-  document.querySelectorAll('.contact-item').forEach(el => el.classList.remove('active'));
 };
 
 function getChatId(a, b) {
