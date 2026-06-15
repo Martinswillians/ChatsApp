@@ -1172,29 +1172,53 @@ function getChatId(a, b) {
   return [a, b].sort().join('_');
 }
 
+// =================== CHAT CORRIGIDO (SEM DUPLICAÇÃO) ===================
 function loadMessages(contactId) {
   const container = document.getElementById('messages-container');
+  
+  // 1. Limpa o container imediatamente para não acumular visualmente
   container.innerHTML = '';
-  if (unsubscribeMessages) { unsubscribeMessages(); unsubscribeMessages = null; }
+  
+  // 2. Se já existir um ouvinte ativo, desliga ele usando a referência antiga
+  if (unsubscribeMessages && messagesRef) {
+    off(messagesRef, 'child_added', unsubscribeMessages);
+    unsubscribeMessages = null;
+  }
 
   const chatId = getChatId(currentUser.uid, contactId);
-  const mRef = ref(db, `messages/${chatId}`);
-  messagesRef = mRef;
-  const handler = onChildAdded(mRef, (snap) => {
-    renderMessage(snap.val());
+  // Guardamos a referência atual do nó de mensagens
+  messagesRef = ref(db, `messages/${chatId}`);
+  
+  // 3. Criamos o novo ouvinte e guardamos a função exata do handler
+  const handler = (snap) => {
+    // Evita duplicar mensagens que já foram renderizadas na tela atual
+    const msgId = snap.key;
+    if (document.getElementById(`msg-${msgId}`)) return;
+
+    renderMessage(snap.val(), msgId);
     scrollBottom();
-  });
-  unsubscribeMessages = () => off(mRef, 'child_added', handler);
+  };
+
+  // Ativa o ouvinte no Firebase
+  onChildAdded(messagesRef, handler);
+  
+  // Guarda o handler exato para podermos desligar depois
+  unsubscribeMessages = handler;
 }
 
-function renderMessage(msg) {
+function renderMessage(msg, msgId) {
   const container = document.getElementById('messages-container');
   const isSent = msg.senderId === currentUser.uid;
   const div = document.createElement('div');
   const isOnlyEmoji = /^[\p{Emoji}\s]{1,3}$/u.test(msg.text);
+  
+  // Adicionamos um ID único na div da mensagem para o validador do 'handler'
+  div.id = `msg-${msgId}`;
   div.className = `message ${isSent ? 'sent' : 'received'} ${isOnlyEmoji ? 'msg-emoji' : ''}`;
+  
   const t = msg.ts ? new Date(msg.ts) : new Date();
   const time = `${t.getHours().toString().padStart(2,'0')}:${t.getMinutes().toString().padStart(2,'0')}`;
+  
   div.innerHTML = `
     ${!isSent ? `<div class="msg-sender">${msg.senderName || ''}</div>` : ''}
     <div class="msg-text">${escapeHtml(msg.text)}</div>
@@ -1224,12 +1248,20 @@ window.sendMessage = async () => {
     text,
     senderId: currentUser.uid,
     senderName: currentUser.displayName,
-    ts: Date.now()
+    ts: serverTimestamp() // Usa o timestamp do servidor diretamente
   };
 
   const chatId = getChatId(currentUser.uid, currentContact.uid);
-  await push(ref(db, `messages/${chatId}`), { ...msg, ts: serverTimestamp() });
-  await update(ref(db, `users/${currentUser.uid}/contacts/${currentContact.uid}`), { lastMsg: text, lastTime: new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}) });
+  
+  // Envia para o Firebase
+  await push(ref(db, `messages/${chatId}`), msg);
+  
+  // Atualiza a lista de contatos com a última mensagem
+  const horaAtual = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  await update(ref(db, `users/${currentUser.uid}/contacts/${currentContact.uid}`), { 
+    lastMsg: text, 
+    lastTime: horaAtual 
+  });
 };
 
 window.clearChat = () => {
