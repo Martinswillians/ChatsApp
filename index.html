@@ -801,13 +801,13 @@ import {
 // =================== FIREBASE CONFIG ===================
 // 🔥 SUBSTITUA COM SUAS CREDENCIAIS DO FIREBASE
 const firebaseConfig = {
-  apiKey: "AIzaSyClCdBh60Y4p3mZcgFA2sl7tnuSbaBWIYA",
-  authDomain: "chatsapp-1e307.firebaseapp.com",
-  projectId: "chatsapp-1e307",
-  storageBucket: "chatsapp-1e307.firebasestorage.app",
-  messagingSenderId: "156676376226",
-  appId: "1:156676376226:web:592902642b135d8534f9fb",
-  measurementId: "G-5SJMGZJQ9W"
+  apiKey: "AIzaSyDEMO_SUBSTITUA_COM_SUA_API_KEY",
+  authDomain: "chatapp-familia.firebaseapp.com",
+  databaseURL: "https://chatapp-familia-default-rtdb.firebaseio.com",
+  projectId: "chatapp-familia",
+  storageBucket: "chatapp-familia.appspot.com",
+  messagingSenderId: "123456789",
+  appId: "1:123456789:web:abcdef123456"
 };
 
 // =================== DEMO MODE ===================
@@ -890,13 +890,17 @@ window.registerUser = async () => {
   try {
     const cred = await createUserWithEmailAndPassword(auth, email, pass);
     await updateProfile(cred.user, { displayName: name });
-    await set(ref(db, `users/${cred.user.uid}`), {
+    const userData = {
       name, email,
       emoji: selectedAvatar.emoji,
       color: selectedAvatar.color,
       online: true,
       createdAt: serverTimestamp()
-    });
+    };
+    await set(ref(db, `users/${cred.user.uid}`), userData);
+    // Salva índice de e-mail para busca sem precisar ler todos os usuários
+    const emailKey = email.toLowerCase().replace(/\./g, ',');
+    await set(ref(db, `email_index/${emailKey}`), cred.user.uid);
   } catch(e) {
     err.textContent = e.code === 'auth/email-already-in-use' ? 'E-mail já cadastrado' : e.message;
   }
@@ -966,9 +970,25 @@ function showApp() {
   loadContacts();
   buildEmojiPanel();
   if (DEMO_MODE) loadDemoContacts();
+  if (!DEMO_MODE) listenContactRequests();
 }
 
 // =================== CONTACTS ===================
+// Aceita automaticamente solicitações de contato recebidas
+function listenContactRequests() {
+  if (!currentUser) return;
+  const reqRef = ref(db, `contact_requests/${currentUser.uid}`);
+  onChildAdded(reqRef, async (snap) => {
+    const requesterId = snap.key;
+    const requesterData = snap.val();
+    // Adiciona o solicitante como contato
+    await set(ref(db, `users/${currentUser.uid}/contacts/${requesterId}`), true);
+    // Remove a solicitação processada
+    await remove(ref(db, `contact_requests/${currentUser.uid}/${requesterId}`));
+    showNotif(requesterData.emoji || '👤', requesterData.name || 'Familiar', 'te adicionou como contato! 💚');
+  });
+}
+
 function loadDemoContacts() {
   contacts = demoContacts;
   renderContacts(contacts);
@@ -1059,19 +1079,63 @@ window.addContact = async () => {
     return;
   }
 
+  err.textContent = '🔍 Buscando...';
+  err.style.color = '#8696A0';
+
   try {
-    // Find user by email
-    const usersSnap = await get(ref(db, 'users'));
-    let found = null, foundId = null;
-    usersSnap.forEach(child => {
-      if (child.val().email === email) { found = child.val(); foundId = child.key; }
-    });
-    if (!found) { err.textContent = 'Usuário não encontrado'; return; }
-    if (foundId === currentUser.uid) { err.textContent = 'Não pode adicionar a si mesmo'; return; }
+    // Busca pelo índice de e-mail (sem precisar ler todos os usuários)
+    const emailKey = email.toLowerCase().replace(/\./g, ',');
+    const idxSnap = await get(ref(db, `email_index/${emailKey}`));
+
+    if (!idxSnap.exists()) {
+      err.textContent = '❌ Usuário não encontrado. Verifique o e-mail.';
+      err.style.color = '#FF4444';
+      return;
+    }
+
+    const foundId = idxSnap.val();
+    if (foundId === currentUser.uid) {
+      err.textContent = 'Não pode adicionar a si mesmo';
+      err.style.color = '#FF4444';
+      return;
+    }
+
+    // Verifica se já é contato
+    const alreadySnap = await get(ref(db, `users/${currentUser.uid}/contacts/${foundId}`));
+    if (alreadySnap.exists()) {
+      err.textContent = '⚠️ Este familiar já está na sua lista';
+      err.style.color = '#FFA500';
+      return;
+    }
+
+    // Busca dados do usuário encontrado (precisa de permissão de leitura em /users)
+    const userSnap = await get(ref(db, `users/${foundId}`));
+    const foundUser = userSnap.exists() ? userSnap.val() : { name: email.split('@')[0], emoji: '👤', color: '#555' };
+
+    // Adiciona contato para o usuário atual
     await set(ref(db, `users/${currentUser.uid}/contacts/${foundId}`), true);
-    await set(ref(db, `users/${foundId}/contacts/${currentUser.uid}`), true);
+
+    // Envia solicitação para o outro usuário (escrita em /contact_requests, aberta nas regras)
+    await set(ref(db, `contact_requests/${foundId}/${currentUser.uid}`), {
+      name: currentUser.displayName,
+      emoji: currentUser.emoji || '🦁',
+      color: currentUser.color || '#FFA500',
+      email: currentUser.email || '',
+      ts: Date.now()
+    });
+
+    err.textContent = '';
+    err.style.color = '#FF4444';
     closeAddContact();
-  } catch(e) { err.textContent = e.message; }
+    showNotif(foundUser.emoji || '👤', foundUser.name || email, 'Familiar adicionado! ✅');
+  } catch(e) {
+    err.style.color = '#FF4444';
+    if (e.message && (e.message.includes('Permission denied') || e.message.includes('PERMISSION_DENIED'))) {
+      err.textContent = '⚠️ Permissão negada. Atualize as Regras no Firebase Console (veja README).';
+    } else {
+      err.textContent = '❌ ' + (e.message || 'Erro desconhecido');
+    }
+  }
 };
 
 // =================== CHAT ===================

@@ -43,8 +43,8 @@ const firebaseConfig = {
 
 Cole as suas credenciais reais do Firebase.
 
-### Passo 6 — Regras do Database (recomendado)
-No console Firebase → Realtime Database → **Regras**, cole:
+### Passo 6 — Regras do Database (OBRIGATÓRIO para adicionar contatos)
+No console Firebase → Realtime Database → **Regras**, cole exatamente isso e clique em **Publicar**:
 
 ```json
 {
@@ -53,6 +53,16 @@ No console Firebase → Realtime Database → **Regras**, cole:
       "$uid": {
         ".read": "auth != null",
         ".write": "auth != null && auth.uid == $uid"
+      }
+    },
+    "email_index": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    },
+    "contact_requests": {
+      "$uid": {
+        ".read": "auth != null && auth.uid == $uid",
+        ".write": "auth != null"
       }
     },
     "messages": {
@@ -64,6 +74,12 @@ No console Firebase → Realtime Database → **Regras**, cole:
   }
 }
 ```
+
+> ⚠️ **Sem essas regras o erro "Permission denied" aparece ao adicionar familiar.**
+
+### ⚠️ Usuários já cadastrados antes desta correção
+Se você já criou contas, precisará recriar ou rodar este passo manual no **Console Firebase → Realtime Database → Dados**:
+Adicione manualmente em `/email_index` a chave `seuemail,com` (troque `.` por `,`) com o valor do UID do usuário.
 
 ---
 
