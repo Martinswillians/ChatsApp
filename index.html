@@ -33,7 +33,7 @@
     background: var(--bg-chat);
     color: var(--text-primary);
     height: 100vh;
-    height: 100dvh; /* Suporte dinâmico para barras do iPhone */
+    height: 100dvh;
     overflow: hidden;
     display: flex;
     flex-direction: column;
@@ -116,7 +116,7 @@
     border-radius: 8px;
     padding: 12px 16px;
     color: var(--text-primary);
-    font-size: 16px; /* Evita zoom automático indesejado no input do iPhone */
+    font-size: 16px;
     outline: none;
     transition: border-color 0.2s;
     width: 100%;
@@ -192,13 +192,18 @@
     justify-content: space-between;
     padding: 10px 16px;
     background: var(--bg-input);
-    padding-top: cubic-bezier(0,0,0,0); /* Suporte extra para notch do iPhone */
   }
   .sidebar-header-left { display: flex; align-items: center; gap: 10px; }
-  .my-avatar {
+  
+  .my-avatar, .contact-avatar, .profile-preview-container {
     width: 40px; height: 40px; border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
     font-size: 18px; cursor: pointer;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    flex-shrink: 0;
+    overflow: hidden;
   }
   .my-name { font-size: 15px; font-weight: 600; cursor: pointer; color: var(--text-primary); }
   .sidebar-actions { display: flex; gap: 8px; }
@@ -208,6 +213,14 @@
     -webkit-tap-highlight-color: transparent;
   }
   
+  .chat-header {
+    display: flex;
+    align-items: center;
+    padding: 10px 16px;
+    background: var(--bg-input);
+    gap: 12px;
+    border-bottom: 1px solid var(--border);
+  }
   .chat-header-info { flex: 1; min-width: 0; }
   .chat-header-name { font-size: 16px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .chat-header-status { font-size: 13px; color: var(--primary); margin-top: 1px; }
@@ -237,7 +250,7 @@
     display: flex;
     flex-direction: column;
     gap: 4px;
-    -webkit-overflow-scrolling: touch; /* Scroll fluido no iPhone */
+    -webkit-overflow-scrolling: touch;
   }
   .icon-btn {
     background: none;
@@ -294,9 +307,7 @@
   }
   .contact-item:hover, .contact-item.active { background: var(--hover); }
   .contact-avatar {
-    width: 48px; height: 48px; border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 22px; flex-shrink: 0; position: relative;
+    width: 48px; height: 48px; font-size: 22px; position: relative;
   }
   .online-dot {
     position: absolute;
@@ -321,7 +332,7 @@
     font-weight: 600;
   }
 
-  /* ===== NEW CONTACT MODAL ===== */
+  /* ===== MODAIS ===== */
   .modal-overlay {
     display: none;
     position: fixed; top: 0; left: 0; right: 0; bottom: 0;
@@ -342,6 +353,7 @@
     flex-direction: column;
     gap: 16px;
     box-shadow: 0 4px 24px rgba(0,0,0,0.5);
+    position: relative;
   }
   .modal h3 { font-size: 18px; font-weight: 500; }
   .modal-close {
@@ -350,6 +362,18 @@
     background: none; border: none;
     color: var(--text-secondary); font-size: 20px; cursor: pointer;
   }
+
+  .profile-preview-container {
+    width: 90px; height: 90px; font-size: 42px; margin: 0 auto;
+    position: relative; border: 2px solid var(--border);
+  }
+  .change-pic-overlay {
+    position: absolute; inset: 0; background: rgba(0,0,0,0.5);
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; transition: opacity 0.2s; border-radius: 50%;
+  }
+  .profile-preview-container:hover .change-pic-overlay { opacity: 1; }
+  .change-pic-overlay svg { color: white; width: 24px; height: 24px; }
 
   /* ===== CHAT AREA ===== */
   #chat-area {
@@ -429,7 +453,6 @@
     display: flex;
     align-items: center;
     gap: 10px;
-    padding-bottom: cubic-bezier(0,0,0,0); /* Protege contra área de gestos inferior do iPhone */
   }
   .emoji-btn, .attach-btn {
     background: none; border: none;
@@ -451,7 +474,7 @@
   }
   .message-input-wrap input {
     background: none; border: none;
-    color: var(--text-primary); font-size: 16px; /* 16px impede o zoom automático de tela no Safari do iOS */
+    color: var(--text-primary); font-size: 16px;
     outline: none; width: 100%;
   }
   .message-input-wrap input::placeholder { color: var(--text-secondary); }
@@ -517,6 +540,7 @@
     width: 120px; height: 120px; border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
     font-size: 56px; margin-bottom: 8px;
+    background-size: cover; background-position: center;
   }
   .remote-name-call { font-size: 24px; font-weight: 500; color: white; }
   .call-status { font-size: 16px; color: rgba(255,255,255,0.6); }
@@ -543,7 +567,6 @@
     display: flex;
     justify-content: center;
     gap: 20px;
-    padding-bottom: cubic-bezier(0,0,0,0);
   }
   .call-btn {
     width: 60px; height: 60px;
@@ -586,7 +609,7 @@
   .incoming-avatar {
     width: 100px; height: 100px; border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
-    font-size: 48px;
+    font-size: 48px; background-size: cover; background-position: center;
     animation: pulse 1.5s infinite;
   }
   @keyframes pulse {
@@ -611,7 +634,7 @@
   /* NOTIFICATION */
   .notification {
     position: fixed;
-    top: 20px; left: 20px; right: 20px; /* Centraliza melhor na tela do celular */
+    top: 20px; left: 20px; right: 20px;
     background: var(--bg-input);
     border: 1px solid var(--border);
     border-radius: 12px;
@@ -625,67 +648,23 @@
     .notification { left: auto; width: 320px; }
   }
   @keyframes slideIn { from { transform: translateY(-120%); opacity: 0; } to { transform: none; opacity: 1; } }
-  .notif-avatar { font-size: 28px; }
+  .notif-avatar { font-size: 28px; width:32px; height:32px; background-size:cover; background-position:center; border-radius:50%; display:flex; align-items:center; justify-content:center; }
   .notif-name { font-size: 14px; font-weight: 600; color: var(--text-primary); }
   .notif-text { font-size: 13px; color: var(--text-secondary); margin-top: 2px; }
 
-  /* ===== RESPONSIVIDADE MOBILE / IPHONE ===== */
+  /* ===== RESPONSIVIDADE MOBILE ===== */
   @media (max-width: 768px) {
-    #sidebar { 
-      width: 100% !important; 
-      min-width: 100% !important;
-    }
-    
-    #chat-area { 
-      display: none !important; 
-      width: 100%;
-    }
-    
-    #app.chat-active #sidebar { 
-      display: none !important; 
-    }
-    #app.chat-active #chat-area { 
-      display: flex !important; 
-    }
-      
-    .back-btn {
-      display: flex !important;
-      align-items: center;
-      justify-content: center;
-      background: none;
-      border: none;
-      color: var(--text-secondary);
-      cursor: pointer;
-      padding: 8px;
-      margin-right: 4px;
-    }
-    
-    .chat-header {
-      padding: 10px 8px;
-      gap: 6px;
-    }
-    .video-btn {
-      padding: 8px 12px;
-      font-size: 12px;
-    }
-    .video-btn span {
-      display: none;
-    }
-    .message {
-      max-width: 85%;
-    }
-    
-    .local-video-pip {
-      width: 90px;
-      height: 135px;
-      bottom: 15px;
-      right: 15px;
-    }
-    .call-btn {
-      width: 54px;
-      height: 54px;
-      font-size: 22px;
-    }
+    #sidebar { width: 100% !important; min-width: 100% !important; }
+    #chat-area { display: none !important; width: 100%; }
+    #app.chat-active #sidebar { display: none !important; }
+    #app.chat-active #chat-area { display: flex !important; }
+    .back-btn { display: flex !important; align-items: center; justify-content: center; background: none; border: none; color: var(--text-secondary); padding: 8px; margin-right: 4px; }
+    .chat-header { padding: 10px 8px; gap: 6px; }
+    .video-btn { padding: 8px 12px; font-size: 12px; }
+    .video-btn span { display: none; }
+    .message { max-width: 85%; }
+    .local-video-pip { width: 90px; height: 135px; bottom: 15px; right: 15px; }
+    .call-btn { width: 54px; height: 54px; font-size: 22px; }
   }
 </style>
 </head>
@@ -718,13 +697,13 @@
         <input class="auth-input" id="reg-name" type="text" placeholder="Seu nome" autocomplete="name">
         <input class="auth-input" id="reg-email" type="email" placeholder="E-mail" inputmode="email" autocomplete="email">
         <input class="auth-input" id="reg-pass" type="password" placeholder="Senha (mín. 6 caracteres)">
-        <div style="font-size:13px;color:var(--text-secondary);text-align:center">Escolha seu avatar</div>
+        <div style="font-size:13px;color:var(--text-secondary);text-align:center">Escolha seu avatar inicial</div>
         <div class="avatar-selector">
           <div class="avatar-opt selected" data-emoji="🦁" style="background:#FFA500" onclick="selectAvatar(this,'🦁','#FFA500')">🦁</div>
           <div class="avatar-opt" data-emoji="🐻" style="background:#8B4513" onclick="selectAvatar(this,'🐻','#8B4513')">🐻</div>
           <div class="avatar-opt" data-emoji="🦊" style="background:#FF6B35" onclick="selectAvatar(this,'🦊','#FF6B35')">🦊</div>
           <div class="avatar-opt" data-emoji="🐱" style="background:#9B59B6" onclick="selectAvatar(this,'🐱','#9B59B6')">🐱</div>
-          <div class="avatar-opt" data-emoji="🐶" style="background:#3498DB" onclick="selectAvatar(this,'🐶','#3498DB')">🐶</div>
+          <div class="avatar-opt" data-emoji="🐶" style="background:#3498DB" onclick="selectAvatar(this['🐶','#3498DB'])">🐶</div>
           <div class="avatar-opt" data-emoji="🐸" style="background:#27AE60" onclick="selectAvatar(this,'🐸','#27AE60')">🐸</div>
         </div>
         <div class="auth-error" id="reg-error"></div>
@@ -738,8 +717,8 @@
   <div id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-header-left">
-        <div class="my-avatar" id="my-avatar-display" onclick="showProfile()"></div>
-        <span class="my-name" id="my-name-display"></span>
+        <div class="my-avatar" id="my-avatar-display" onclick="openProfileModal()"></div>
+        <span class="my-name" id="my-name-display" onclick="openProfileModal()"></span>
       </div>
       <div class="sidebar-actions">
         <button class="icon-btn" onclick="showAddContact()" title="Adicionar contato">
@@ -778,7 +757,7 @@
         <button class="back-btn" onclick="closeChatMobile()" title="Voltar para contatos">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
         </button>
-        <div class="contact-avatar" id="chat-header-avatar" style="width:40px;height:40px;font-size:20px"></div>
+        <div class="contact-avatar" id="chat-header-avatar" style="width:40px;height:40px;"></div>
         <div class="chat-header-info">
           <div class="chat-header-name" id="chat-header-name"></div>
           <div class="chat-header-status" id="chat-header-status">online</div>
@@ -812,8 +791,27 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="profile-modal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeProfileModal()">✕</button>
+    <h3>Meu Perfil</h3>
+    <p style="font-size:13px;color:var(--text-secondary);text-align:center">Altere sua foto/avatar e seu nome público</p>
+    
+    <div class="profile-preview-container" id="profile-preview-avatar" onclick="triggerFileInput()">
+      <div class="change-pic-overlay">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+      </div>
+    </div>
+    <input type="file" id="profile-file-input" accept="image/*" style="display:none" onchange="handleProfilePicture(this)">
+
+    <input class="auth-input" id="profile-name-input" type="text" placeholder="Seu Nome">
+    <div class="auth-error" id="profile-error" style="color:var(--primary)"></div>
+    <button class="auth-btn" onclick="saveProfileChanges()">Salvar Alterações</button>
+  </div>
+</div>
+
 <div class="modal-overlay" id="add-contact-modal">
-  <div class="modal" style="position:relative">
+  <div class="modal">
     <button class="modal-close" onclick="closeAddContact()">✕</button>
     <h3>Adicionar familiar ou amigo</h3>
     <p style="font-size:13px;color:var(--text-secondary)">Digite o e-mail do familiar ou amigo que deseja adicionar</p>
@@ -881,6 +879,9 @@ import {
   getDatabase, ref, set, get, onValue, push, serverTimestamp,
   onChildAdded, off, update, onDisconnect, remove
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+import {
+  getStorage, ref as sRef, uploadString, getDownloadURL
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
 // =================== FIREBASE CONFIG ===================
 const firebaseConfig = {
@@ -896,6 +897,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getDatabase(app);
+const storage = getStorage(app);
 
 // =================== STATE ===================
 let currentUser = null;
@@ -910,6 +912,22 @@ let peerConnection = null;
 let muted = false;
 let cameraOff = false;
 let unsubscribeMessages = null;
+let isChatLoading = false;
+let base64ProfileImage = null;
+
+// =================== RENDERS COMPARTILHADOS ===================
+function applyAvatarStyle(element, userObj) {
+  if (!element || !userObj) return;
+  if (userObj.photoUrl) {
+    element.style.backgroundImage = `url('${userObj.photoUrl}')`;
+    element.textContent = '';
+    element.style.backgroundColor = 'transparent';
+  } else {
+    element.style.backgroundImage = 'none';
+    element.textContent = userObj.emoji || '👤';
+    element.style.background = userObj.color || '#555';
+  }
+}
 
 // =================== AUTH HELPERS ===================
 window.switchTab = (tab) => {
@@ -953,6 +971,7 @@ window.registerUser = async () => {
       name, email,
       emoji: selectedAvatar.emoji,
       color: selectedAvatar.color,
+      photoUrl: "",
       online: true,
       createdAt: serverTimestamp()
     };
@@ -974,14 +993,19 @@ window.logoutUser = async () => {
 // =================== APP INIT ===================
 onAuthStateChanged(auth, async (user) => {
   if (user) {
-    const snap = await get(ref(db, `users/${user.uid}`));
-    const data = snap.val() || {};
-    currentUser = {
-      uid: user.uid,
-      displayName: data.name || user.displayName,
-      emoji: data.emoji || '🦁',
-      color: data.color || '#FFA500'
-    };
+    onValue(ref(db, `users/${user.uid}`), (snap) => {
+      const data = snap.val() || {};
+      currentUser = {
+        uid: user.uid,
+        displayName: data.name || user.displayName,
+        emoji: data.emoji || '🦁',
+        color: data.color || '#FFA500',
+        photoUrl: data.photoUrl || ""
+      };
+      document.getElementById('my-name-display').textContent = currentUser.displayName;
+      applyAvatarStyle(document.getElementById('my-avatar-display'), currentUser);
+    });
+
     await update(ref(db, `users/${user.uid}`), { online: true });
     onDisconnect(ref(db, `users/${user.uid}/online`)).set(false);
     showApp();
@@ -994,18 +1018,88 @@ onAuthStateChanged(auth, async (user) => {
 function showApp() {
   document.getElementById('auth-screen').style.display = 'none';
   document.getElementById('app').classList.add('visible');
-  document.getElementById('my-name-display').textContent = currentUser.displayName;
-  const avEl = document.getElementById('my-avatar-display');
-  avEl.textContent = currentUser.emoji || '🦁';
-  avEl.style.background = currentUser.color || '#FFA500';
-  avEl.style.borderRadius = '50%';
-  avEl.style.width = '40px'; avEl.style.height = '40px';
-  avEl.style.display = 'flex'; avEl.style.alignItems = 'center';
-  avEl.style.justifyContent = 'center'; avEl.style.fontSize = '20px';
   loadContacts();
   buildEmojiPanel();
   listenContactRequests();
 }
+
+// =================== PROFILE MODAL LÓGICA ===================
+window.openProfileModal = () => {
+  document.getElementById('profile-modal').classList.add('visible');
+  document.getElementById('profile-name-input').value = currentUser.displayName;
+  document.getElementById('profile-error').textContent = '';
+  base64ProfileImage = null;
+  applyAvatarStyle(document.getElementById('profile-preview-avatar'), currentUser);
+};
+
+window.closeProfileModal = () => {
+  document.getElementById('profile-modal').classList.remove('visible');
+};
+
+window.triggerFileInput = () => {
+  document.getElementById('profile-file-input').click();
+};
+
+window.handleProfilePicture = (input) => {
+  const file = input.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = 200;
+      canvas.height = 200;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, 200, 200);
+      
+      base64ProfileImage = canvas.toDataURL('image/jpeg', 0.8);
+      
+      const preview = document.getElementById('profile-preview-avatar');
+      preview.style.backgroundImage = `url('${base64ProfileImage}')`;
+      preview.textContent = '';
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+};
+
+window.saveProfileChanges = async () => {
+  const newName = document.getElementById('profile-name-input').value.trim();
+  const statusLbl = document.getElementById('profile-error');
+  
+  if (!newName) {
+    statusLbl.textContent = '❌ O nome não pode estar vazio.';
+    statusLbl.style.color = '#FF4444';
+    return;
+  }
+
+  statusLbl.textContent = '⏳ Salvando alterações...';
+  statusLbl.style.color = 'var(--primary)';
+
+  try {
+    let finalPhotoUrl = currentUser.photoUrl || "";
+
+    if (base64ProfileImage) {
+      const storageRef = sRef(storage, `profiles/${currentUser.uid}.jpg`);
+      await uploadString(storageRef, base64ProfileImage, 'data_url');
+      finalPhotoUrl = await getDownloadURL(storageRef);
+    }
+
+    await update(ref(db, `users/${currentUser.uid}`), {
+      name: newName,
+      photoUrl: finalPhotoUrl
+    });
+
+    statusLbl.textContent = '✅ Perfil atualizado com sucesso!';
+    statusLbl.style.color = 'var(--primary)';
+    setTimeout(closeProfileModal, 1000);
+  } catch (e) {
+    statusLbl.textContent = '❌ Erro ao salvar: ' + e.message;
+    statusLbl.style.color = '#FF4444';
+  }
+};
 
 // =================== CONTACTS ===================
 function listenContactRequests() {
@@ -1016,7 +1110,7 @@ function listenContactRequests() {
     const requesterData = snap.val();
     await set(ref(db, `users/${currentUser.uid}/contacts/${requesterId}`), true);
     await remove(ref(db, `contact_requests/${currentUser.uid}/${requesterId}`));
-    showNotif(requesterData.emoji || '👤', requesterData.name || 'Familiar ou amigo', 'te adicionou como contato! 💚');
+    showNotif(requesterData.photoUrl || requesterData.emoji || '👤', requesterData.name || 'Familiar ou amigo', 'te adicionou como contato! 💚', !!requesterData.photoUrl);
   });
 }
 
@@ -1025,12 +1119,18 @@ function loadContacts() {
   onValue(myRef, async (snap) => {
     const cids = snap.val() || {};
     contacts = {};
-    const promises = Object.keys(cids).map(async (cid) => {
-      const uSnap = await get(ref(db, `users/${cid}`));
-      if (uSnap.exists()) contacts[cid] = uSnap.val();
+    Object.keys(cids).forEach((cid) => {
+      onValue(ref(db, `users/${cid}`), (uSnap) => {
+        if (uSnap.exists()) {
+          contacts[cid] = uSnap.val();
+          renderContacts(contacts);
+          if (currentContact && currentContact.uid === cid) {
+            document.getElementById('chat-header-name').textContent = contacts[cid].name;
+            applyAvatarStyle(document.getElementById('chat-header-avatar'), contacts[cid]);
+          }
+        }
+      });
     });
-    await Promise.all(promises);
-    renderContacts(contacts);
   });
 }
 
@@ -1047,9 +1147,10 @@ function renderContacts(list) {
     const item = document.createElement('div');
     item.className = 'contact-item';
     item.dataset.uid = uid;
+    
+    const avatarId = `avatar-render-${uid}`;
     item.innerHTML = `
-      <div class="contact-avatar" style="background:${c.color||'#555'};font-size:22px">
-        ${c.emoji||'👤'}
+      <div class="contact-avatar" id="${avatarId}">
         ${c.online ? '<div class="online-dot"></div>' : ''}
       </div>
       <div class="contact-info">
@@ -1060,6 +1161,9 @@ function renderContacts(list) {
         <div class="contact-time">${c.lastTime || ''}</div>
         ${c.unread ? `<div class="badge">${c.unread}</div>` : ''}
       </div>`;
+    
+    setTimeout(() => applyAvatarStyle(document.getElementById(avatarId), c), 0);
+    
     item.onclick = () => openChat(uid, c);
     el.appendChild(item);
   });
@@ -1122,70 +1226,28 @@ window.addContact = async () => {
       name: currentUser.displayName,
       emoji: currentUser.emoji || '🦁',
       color: currentUser.color || '#FFA500',
+      photoUrl: currentUser.photoUrl || '',
       email: currentUser.email || '',
       ts: Date.now()
     });
 
     err.textContent = '';
     closeAddContact();
-    showNotif(foundUser.emoji || '👤', foundUser.name || email, 'Familiar ou amigo adicionado! ✅');
+    showNotif(foundUser.photoUrl || foundUser.emoji || '👤', foundUser.name || email, 'Familiar ou amigo adicionado! ✅', !!foundUser.photoUrl);
   } catch(e) {
     err.style.color = '#FF4444';
-    if (e.message && (e.message.includes('Permission denied') || e.message.includes('PERMISSION_DENIED'))) {
-      err.textContent = '⚠️ Permissão negada. Atualize as Regras no Firebase Console.';
-    } else {
-      err.textContent = '❌ ' + (e.message || 'Erro desconhecido');
-    }
+    err.textContent = '❌ ' + (e.message || 'Erro desconhecido');
   }
 };
 
-// =================== CHAT ===================
-function openChat(uid, contact) {
-  currentContact = { uid, ...contact };
-  
-  document.querySelectorAll('.contact-item').forEach(el => {
-    el.classList.toggle('active', el.dataset.uid === uid);
-  });
-  
-  document.getElementById('empty-state').style.display = 'none';
-  document.getElementById('chat-view').classList.add('visible');
-  
-  document.getElementById('app').classList.add('chat-active');
-
-  const headerAvatar = document.getElementById('chat-header-avatar');
-  headerAvatar.textContent = contact.emoji || '👤';
-  headerAvatar.style.background = contact.color || '#555';
-  headerAvatar.style.borderRadius = '50%';
-  
-  document.getElementById('chat-header-name').textContent = contact.name;
-  document.getElementById('chat-header-status').textContent = contact.online ? 'online' : 'offline';
-  
-  loadMessages(uid);
-}
-
-window.closeChatMobile = () => {
-  document.getElementById('app').classList.remove('chat-active');
-  currentContact = null;
-};
-
-function getChatId(a, b) {
-  return [a, b].sort().join('_');
-}
-
-// =================== CHAT CORRIGIDO (CONTROLE DE DUPLO GATILHO) ===================
-let isChatLoading = false; // Trava de segurança contra cliques duplos no celular
-
+// =================== CHAT VIEW LÓGICA ===================
 function loadMessages(contactId) {
-  // Se já houver uma carga em andamento para este contato, ignora o segundo gatilho
   if (isChatLoading) return;
   isChatLoading = true;
 
   const container = document.getElementById('messages-container');
-  
-  // Limpa o container imediatamente
   container.innerHTML = '';
   
-  // Desliga categoricamente qualquer ouvinte anterior que possa ter ficado órfão
   if (messagesRef) {
     off(messagesRef, 'child_added');
   }
@@ -1196,27 +1258,20 @@ function loadMessages(contactId) {
   
   const handler = (snap) => {
     const msgId = snap.key;
-    // Evita renderizar se o elemento DOM com esse ID já existir na tela
     if (document.getElementById(`msg-${msgId}`)) return;
 
     renderMessage(snap.val(), msgId);
     scrollBottom();
   };
 
-  // Ativa o ouvinte único no Firebase
   onChildAdded(messagesRef, handler);
   unsubscribeMessages = handler;
 
-  // Libera a trava após um pequeno intervalo para o celular respirar
-  setTimeout(() => {
-    isChatLoading = false;
-  }, 400);
+  setTimeout(() => { isChatLoading = false; }, 400);
 }
 
 function renderMessage(msg, msgId) {
   const container = document.getElementById('messages-container');
-  
-  // Verificação dupla no DOM para garantir integridade absoluta no mobile
   if (document.getElementById(`msg-${msgId}`)) return;
 
   const isSent = msg.senderId === currentUser.uid;
@@ -1239,15 +1294,40 @@ function renderMessage(msg, msgId) {
   container.appendChild(div);
 }
 
+function openChat(uid, contact) {
+  currentContact = { uid, ...contact };
+  
+  document.querySelectorAll('.contact-item').forEach(el => {
+    el.classList.toggle('active', el.dataset.uid === uid);
+  });
+  
+  document.getElementById('empty-state').style.display = 'none';
+  document.getElementById('chat-view').classList.add('visible');
+  document.getElementById('app').classList.add('chat-active');
+
+  applyAvatarStyle(document.getElementById('chat-header-avatar'), contact);
+  document.getElementById('chat-header-name').textContent = contact.name;
+  document.getElementById('chat-header-status').textContent = contact.online ? 'online' : 'offline';
+  
+  loadMessages(uid);
+}
+
+window.closeChatMobile = () => {
+  document.getElementById('app').classList.remove('chat-active');
+  currentContact = null;
+};
+
+function getChatId(a, b) {
+  return [a, b].sort().join('_');
+}
+
 function escapeHtml(t) {
   return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
 function scrollBottom() {
   const c = document.getElementById('messages-container');
-  setTimeout(() => {
-    if (c) c.scrollTop = c.scrollHeight;
-  }, 50);
+  setTimeout(() => { if (c) c.scrollTop = c.scrollHeight; }, 50);
 }
 
 window.sendMessage = async () => {
@@ -1264,7 +1344,6 @@ window.sendMessage = async () => {
   };
 
   const chatId = getChatId(currentUser.uid, currentContact.uid);
-  
   await push(ref(db, `messages/${chatId}`), msg);
   
   const horaAtual = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
@@ -1280,7 +1359,7 @@ window.clearChat = () => {
   }
 };
 
-// =================== EMOJI ===================
+// =================== EMOJI PANEL ===================
 function buildEmojiPanel() {
   const emojis = ['😀','😂','🥰','😍','😎','🤩','😊','🥺','😢','🤔','👍','❤️','🔥','🎉','🙏','💪','✨','🌟','💚','🎊','🌹','🌸','🍀','🦋','⭐','🌈','🎵','🎶','🏡','👨‍👩‍👧‍👦'];
   const panel = document.getElementById('emoji-panel');
@@ -1304,7 +1383,7 @@ document.addEventListener('click', (e) => {
   }
 });
 
-// =================== VIDEO CALL ===================
+// =================== VIDEO CALL LÓGICA ===================
 window.startVideoCall = async () => {
   if (!currentContact) return;
   document.getElementById('video-call').classList.add('active');
@@ -1312,15 +1391,14 @@ window.startVideoCall = async () => {
   remote.style.display = 'flex';
   remote.style.flexDirection = 'column';
   remote.style.alignItems = 'center';
-  document.getElementById('remote-avatar-emoji').textContent = currentContact.emoji || '👤';
-  document.getElementById('remote-avatar-emoji').style.background = currentContact.color || '#555';
+  
+  applyAvatarStyle(document.getElementById('remote-avatar-emoji'), currentContact);
   document.getElementById('remote-call-name').textContent = currentContact.name;
   document.getElementById('call-status-text').textContent = 'Chamando...';
   try {
     localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
     document.getElementById('localVideo').srcObject = localStream;
   } catch(e) {
-    console.log('Camera não disponível:', e);
     document.getElementById('localVideo').style.display = 'none';
   }
   
@@ -1335,9 +1413,8 @@ window.endCall = () => {
   stopCallTimer();
   if (localStream) { localStream.getTracks().forEach(t => t.stop()); localStream = null; }
   if (peerConnection) { peerConnection.close(); peerConnection = null; }
-  const lv = document.getElementById('localVideo');
-  const rv = document.getElementById('remoteVideo');
-  lv.srcObject = null; rv.srcObject = null;
+  document.getElementById('localVideo').srcObject = null; 
+  document.getElementById('remoteVideo').srcObject = null;
 };
 
 window.toggleMute = () => {
@@ -1345,7 +1422,6 @@ window.toggleMute = () => {
   if (localStream) localStream.getAudioTracks().forEach(t => t.enabled = !muted);
   const btn = document.getElementById('btn-mute');
   btn.classList.toggle('btn-active', muted);
-  btn.title = muted ? 'Ativar microfone' : 'Silenciar';
 };
 
 window.toggleCamera = () => {
@@ -1366,30 +1442,34 @@ function startCallTimer() {
 
 function stopCallTimer() {
   clearInterval(callTimerInterval);
-  callSeconds = 0;
   document.getElementById('call-timer').textContent = '00:00';
 }
 
-window.rejectCall = () => {
-  document.getElementById('incoming-call').classList.remove('active');
-};
-
+window.rejectCall = () => { document.getElementById('incoming-call').classList.remove('active'); };
 window.acceptCall = async () => {
   document.getElementById('incoming-call').classList.remove('active');
   await startVideoCall();
 };
 
 // =================== NOTIFICATIONS ===================
-function showNotif(emoji, name, text) {
+function showNotif(avatarSource, name, text, isPhoto = false) {
   const n = document.createElement('div');
   n.className = 'notification';
-  n.innerHTML = `<div class="notif-avatar">${emoji}</div><div><div class="notif-name">${name}</div><div class="notif-text">${text}</div></div>`;
+  
+  const avatarStyle = isPhoto 
+    ? `background-image:url('${avatarSource}')` 
+    : `background:#555;`;
+    
+  n.innerHTML = `
+    <div class="notif-avatar" style="${avatarStyle}">${isPhoto ? '' : avatarSource}</div>
+    <div>
+      <div class="notif-name">${name}</div>
+      <div class="notif-text">${text}</div>
+    </div>`;
   document.body.appendChild(n);
   setTimeout(() => n.remove(), 4000);
 }
 window.showNotif = showNotif;
-
-window.showProfile = () => showNotif(currentUser.emoji||'🦁', currentUser.displayName, '👤 Perfil em desenvolvimento');
 
 </script>
 </body>
