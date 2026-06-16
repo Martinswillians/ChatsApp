@@ -703,7 +703,7 @@
           <div class="avatar-opt" data-emoji="🐻" style="background:#8B4513" onclick="selectAvatar(this,'🐻','#8B4513')">🐻</div>
           <div class="avatar-opt" data-emoji="🦊" style="background:#FF6B35" onclick="selectAvatar(this,'🦊','#FF6B35')">🦊</div>
           <div class="avatar-opt" data-emoji="🐱" style="background:#9B59B6" onclick="selectAvatar(this,'🐱','#9B59B6')">🐱</div>
-          <div class="avatar-opt" data-emoji="🐶" style="background:#3498DB" onclick="selectAvatar(this['🐶','#3498DB'])">🐶</div>
+          <div class="avatar-opt" data-emoji="🐶" style="background:#3498DB" onclick="selectAvatar(this,'🐶','#3498DB')">🐶</div>
           <div class="avatar-opt" data-emoji="🐸" style="background:#27AE60" onclick="selectAvatar(this,'🐸','#27AE60')">🐸</div>
         </div>
         <div class="auth-error" id="reg-error"></div>
@@ -806,7 +806,7 @@
 
     <input class="auth-input" id="profile-name-input" type="text" placeholder="Seu Nome">
     <div class="auth-error" id="profile-error" style="color:var(--primary)"></div>
-    <button class="auth-btn" onclick="saveProfileChanges()">Salvar Alterações</button>
+    <button class="auth-btn" id="save-profile-btn" onclick="saveProfileChanges()">Salvar Alterações</button>
   </div>
 </div>
 
@@ -932,7 +932,7 @@ function applyAvatarStyle(element, userObj) {
 // =================== AUTH HELPERS ===================
 window.switchTab = (tab) => {
   document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
-  if(event) event.target.classList.add('active');
+  if(window.event && window.event.target) window.event.target.classList.add('active');
   document.getElementById('tab-login').style.display = tab === 'login' ? 'block' : 'none';
   document.getElementById('tab-register').style.display = tab === 'register' ? 'block' : 'none';
 };
@@ -1068,6 +1068,7 @@ window.handleProfilePicture = (input) => {
 window.saveProfileChanges = async () => {
   const newName = document.getElementById('profile-name-input').value.trim();
   const statusLbl = document.getElementById('profile-error');
+  const btn = document.getElementById('save-profile-btn');
   
   if (!newName) {
     statusLbl.textContent = '❌ O nome não pode estar vazio.';
@@ -1077,14 +1078,21 @@ window.saveProfileChanges = async () => {
 
   statusLbl.textContent = '⏳ Salvando alterações...';
   statusLbl.style.color = 'var(--primary)';
+  if (btn) btn.disabled = true;
 
   try {
     let finalPhotoUrl = currentUser.photoUrl || "";
 
     if (base64ProfileImage) {
-      const storageRef = sRef(storage, `profiles/${currentUser.uid}.jpg`);
-      await uploadString(storageRef, base64ProfileImage, 'data_url');
-      finalPhotoUrl = await getDownloadURL(storageRef);
+      // Tenta salvar no Firebase Storage. Caso as regras estejam bloqueadas, salva em texto Base64 local no Realtime Database.
+      try {
+        const storageRef = sRef(storage, `profiles/${currentUser.uid}.jpg`);
+        await uploadString(storageRef, base64ProfileImage, 'data_url');
+        finalPhotoUrl = await getDownloadURL(storageRef);
+      } catch (storageErr) {
+        console.warn("Storage bloqueado por regras de precificação/segurança. Salvando imagem local no Database.");
+        finalPhotoUrl = base64ProfileImage; // Fallback estável
+      }
     }
 
     await update(ref(db, `users/${currentUser.uid}`), {
@@ -1098,6 +1106,8 @@ window.saveProfileChanges = async () => {
   } catch (e) {
     statusLbl.textContent = '❌ Erro ao salvar: ' + e.message;
     statusLbl.style.color = '#FF4444';
+  } finally {
+    if (btn) btn.disabled = false;
   }
 };
 
