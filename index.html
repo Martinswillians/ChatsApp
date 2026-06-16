@@ -595,13 +595,8 @@
     justify-content: center;
     gap: 20px;
   }
-  .call-btn {
-    width: 60px; height: 60px;
-    border-radius: 50%; border: none; cursor: pointer;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 24px; transition: all 0.2s;
-    -webkit-tap-highlight-color: transparent;
-  }
+  .call-controls { padding: 24px; background: rgba(0,0,0,0.85); display: flex; justify-content: center; gap: 20px; }
+  .call-btn { width: 60px; height: 60px; border-radius: 50%; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 24px; transition: all 0.2s; -webkit-tap-highlight-color: transparent; }
   .call-btn:active { transform: scale(0.9); }
   .btn-mute { background: #374151; color: white; }
   .btn-camera { background: #374151; color: white; }
@@ -973,6 +968,10 @@ function applyAvatarStyle(element, obj) {
   }
 }
 
+function getChatId(uidA, uidB) {
+  return [uidA, uidB].sort().join('_');
+}
+
 // =================== AUTH HELPERS ===================
 window.switchTab = (tab) => {
   document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
@@ -1135,23 +1134,20 @@ function listenContactRequests() {
 function loadSidebarData() {
   if (!currentUser) return;
 
-  // Limpa listeners antigos para não sobrepor loops de memória
   Object.keys(activeUserListeners).forEach(key => off(activeUserListeners[key]));
   activeUserListeners = {};
 
-  // Ouve alterações diretas na lista de contatos do usuário logado
   onValue(ref(db, `users/${currentUser.uid}/contacts`), (snap) => {
     const cids = snap.val() || {};
     
-    // Processa os contatos de maneira assíncrona, mas isolada
     Object.keys(cids).forEach(cid => {
-      if (activeUserListeners[cid]) return; // Evita duplicar listeners para o mesmo contato
+      if (activeUserListeners[cid]) return; 
 
       const userRef = ref(db, `users/${cid}`);
       activeUserListeners[cid] = onValue(userRef, (uSnap) => {
         if (uSnap.exists()) {
           const userData = uSnap.val();
-          const chatId = [currentUser.uid, cid].sort().join('_');
+          const chatId = getChatId(currentUser.uid, cid);
           
           itemsList[chatId] = {
             id: chatId,
@@ -1170,13 +1166,11 @@ function loadSidebarData() {
       });
     });
 
-    // Se a lista veio limpa, renderiza para remover loaders
     if (Object.keys(cids).length === 0) {
       renderSidebar();
     }
   });
 
-  // Ouve alterações globais na árvore de grupos de maneira isolada
   onValue(ref(db, `groups`), (gSnap) => {
     const allGroups = gSnap.val() || {};
     Object.keys(allGroups).forEach(gid => {
@@ -1520,7 +1514,6 @@ window.closeChatMobile = () => {
   currentChat = null;
 };
 
-function getChatId(a, b) { return [a, b].sort().join('_'); }
 function escapeHtml(t) { return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 function scrollBottom() { const c = document.getElementById('messages-container'); setTimeout(() => { if (c) c.scrollTop = c.scrollHeight; }, 50); }
 window.clearChat = () => { if (confirm('Limpar mensagens desta conversa?')) document.getElementById('messages-container').innerHTML = ''; };
@@ -1559,10 +1552,8 @@ window.addContact = async () => {
     const foundId = idxSnap.val();
     if (foundId === currentUser.uid) { err.textContent = 'Não pode adicionar a si mesmo'; return; }
     
-    // Vincula na raiz local imediatamente
     await set(ref(db, `users/${currentUser.uid}/contacts/${foundId}`), true);
     
-    // Envia requisição recíproca para o amigo/familiar
     await set(ref(db, `contact_requests/${foundId}/${currentUser.uid}`), {
       name: currentUser.displayName, emoji: currentUser.emoji, color: currentUser.color, photoUrl: currentUser.photoUrl
     });
