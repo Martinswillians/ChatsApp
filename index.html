@@ -292,7 +292,6 @@
   #contacts-list { 
     flex: 1; 
     overflow-y: auto; 
-    document: scroll;
     -webkit-overflow-scrolling: touch; 
   }
   #contacts-list::-webkit-scrollbar { width: 6px; }
@@ -595,7 +594,6 @@
     justify-content: center;
     gap: 20px;
   }
-  .call-controls { padding: 24px; background: rgba(0,0,0,0.85); display: flex; justify-content: center; gap: 20px; }
   .call-btn { width: 60px; height: 60px; border-radius: 50%; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 24px; transition: all 0.2s; -webkit-tap-highlight-color: transparent; }
   .call-btn:active { transform: scale(0.9); }
   .btn-mute { background: #374151; color: white; }
@@ -761,11 +759,7 @@
         <input placeholder="Pesquisar conversas ou grupos" id="search-input" oninput="filterContacts()">
       </div>
     </div>
-    <div id="contacts-list">
-      <div style="padding:40px;text-align:center;color:var(--text-secondary);font-size:14px">
-        Adicione um familiar ou amigo para começar a conversar 💚
-      </div>
-    </div>
+    <div id="contacts-list"></div>
   </div>
 
   <div id="chat-area">
@@ -786,7 +780,7 @@
         <div class="contact-avatar" id="chat-header-avatar" style="width:40px;height:40px;"></div>
         <div class="chat-header-info">
           <div class="chat-header-name" id="chat-header-name"></div>
-          <div class="chat-header-status" id="chat-header-status">online</div>
+          <div class="chat-header-status" id="chat-header-status"></div>
         </div>
         <div class="chat-header-actions">
           <button class="video-btn" id="call-action-btn" onclick="startVideoCall()">
@@ -954,7 +948,7 @@ let activeUnreadListeners = {};
 let activeGlobalMsgListeners = {};
 let activeUserListeners = {};
 
-// =================== RENDERS COMPARTILHADOS ===================
+// =================== AVATAR MANAGER ===================
 function applyAvatarStyle(element, obj) {
   if (!element || !obj) return;
   if (obj.photoUrl) {
@@ -972,7 +966,7 @@ function getChatId(uidA, uidB) {
   return [uidA, uidB].sort().join('_');
 }
 
-// =================== AUTH HELPERS ===================
+// =================== AUTH SYSTEM ===================
 window.switchTab = (tab) => {
   document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
   if(window.event && window.event.target) window.event.target.classList.add('active');
@@ -1039,7 +1033,7 @@ window.logoutUser = async () => {
   await signOut(auth);
 };
 
-// =================== APP INIT ===================
+// =================== SESSION MONITORS ===================
 onAuthStateChanged(auth, async (user) => {
   if (user) {
     onValue(ref(db, `users/${user.uid}`), (snap) => {
@@ -1072,7 +1066,7 @@ function showApp() {
   listenContactRequests();
 }
 
-// =================== PROFILE MODAL ===================
+// =================== PROFILE EDIT ===================
 window.openProfileModal = () => {
   document.getElementById('profile-modal').classList.add('visible');
   document.getElementById('profile-name-input').value = currentUser.displayName;
@@ -1082,7 +1076,6 @@ window.openProfileModal = () => {
 };
 
 window.closeProfileModal = () => { document.getElementById('profile-modal').classList.remove('visible'); };
-
 window.triggerFileInput = () => { document.getElementById('profile-file-input').click(); };
 
 window.handleProfilePicture = (input) => {
@@ -1120,7 +1113,7 @@ window.saveProfileChanges = async () => {
   } catch (e) { statusLbl.textContent = '❌ Erro: ' + e.message; }
 };
 
-// =================== CONTATOS E GRUPOS (SIDEBAR) ===================
+// =================== SIDEBAR & REFRESH LOGIC ===================
 function listenContactRequests() {
   if (!currentUser) return;
   onChildAdded(ref(db, `contact_requests/${currentUser.uid}`), async (snap) => {
@@ -1296,7 +1289,7 @@ window.filterContacts = () => {
   });
 };
 
-// =================== MODAL GRUPOS LÓGICA ===================
+// =================== GROUPS ENGINE ===================
 window.showCreateGroup = () => {
   document.getElementById('create-group-modal').classList.add('visible');
   document.getElementById('group-name-input').value = '';
@@ -1352,7 +1345,7 @@ window.createGroup = async () => {
   } catch(e) { err.textContent = '❌ Erro ao criar: ' + e.message; }
 };
 
-// =================== CHAT VIEW (MENSAGENS E SEEN) ===================
+// =================== REALTIME CHAT VIEW & SYNC ===================
 function openChatView(chatItem) {
   currentChat = chatItem;
   
@@ -1518,7 +1511,7 @@ function escapeHtml(t) { return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').rep
 function scrollBottom() { const c = document.getElementById('messages-container'); setTimeout(() => { if (c) c.scrollTop = c.scrollHeight; }, 50); }
 window.clearChat = () => { if (confirm('Limpar mensagens desta conversa?')) document.getElementById('messages-container').innerHTML = ''; };
 
-// =================== EMOJI PANEL ===================
+// =================== EMOJI ENGINE ===================
 function buildEmojiPanel() {
   const emojis = ['😀','😂','🥰','😍','😎','🤩','😊','🥺','😢','🤔','👍','❤️','🔥','🎉','🙏','💪','✨','🌟','💚','🎊','🌹','🌸','🍀','🦋','⭐','🌈','🎵','🎶','🏡','👨‍👩‍👧‍👦'];
   const panel = document.getElementById('emoji-panel');
@@ -1533,7 +1526,7 @@ document.addEventListener('click', (e) => {
   if (!e.target.closest('.emoji-btn') && !e.target.closest('#emoji-panel')) document.getElementById('emoji-panel').classList.remove('visible');
 });
 
-// =================== ADICIONAR CONTATO CONVENCIONAL ===================
+// =================== ADD CONTACTS ===================
 window.showAddContact = () => {
   document.getElementById('add-contact-modal').classList.add('visible');
   document.getElementById('contact-email-input').value = '';
@@ -1565,7 +1558,7 @@ window.addContact = async () => {
   } catch(e) { err.textContent = '❌ ' + e.message; }
 };
 
-// =================== VIDEO CALL LÓGICA ===================
+// =================== VIDEO CALL SYSTEM ===================
 window.startVideoCall = async () => {
   if (!currentChat || currentChat.isGroup) return;
   document.getElementById('video-call').classList.add('active');
@@ -1602,7 +1595,7 @@ function stopCallTimer() { clearInterval(callTimerInterval); document.getElement
 window.rejectCall = () => { document.getElementById('incoming-call').classList.remove('active'); };
 window.acceptCall = async () => { document.getElementById('incoming-call').classList.remove('active'); await startVideoCall(); };
 
-// =================== NOTIFICAÇÕES ===================
+// =================== POPUP NOTIFICATIONS ===================
 function showNotif(avatarSource, name, text, isPhoto = false, onClickCallback = null) {
   const n = document.createElement('div'); 
   n.className = 'notification';
