@@ -879,9 +879,6 @@ import {
   getDatabase, ref, set, get, onValue, push, serverTimestamp,
   onChildAdded, off, update, onDisconnect, remove
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
-import {
-  getStorage, ref as sRef, uploadString, getDownloadURL
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
 // =================== FIREBASE CONFIG ===================
 const firebaseConfig = {
@@ -897,7 +894,6 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getDatabase(app);
-const storage = getStorage(app);
 
 // =================== STATE ===================
 let currentUser = null;
@@ -1084,14 +1080,7 @@ window.saveProfileChanges = async () => {
     let finalPhotoUrl = currentUser.photoUrl || "";
 
     if (base64ProfileImage) {
-      try {
-        const storageRef = sRef(storage, `profiles/${currentUser.uid}.jpg`);
-        await uploadString(storageRef, base64ProfileImage, 'data_url');
-        finalPhotoUrl = await getDownloadURL(storageRef);
-      } catch (storageErr) {
-        console.warn("Storage bloqueado. Salvando imagem local no Database.");
-        finalPhotoUrl = base64ProfileImage;
-      }
+      finalPhotoUrl = base64ProfileImage;
     }
 
     await update(ref(db, `users/${currentUser.uid}`), {
@@ -1099,7 +1088,7 @@ window.saveProfileChanges = async () => {
       photoUrl: finalPhotoUrl
     });
 
-    statusLbl.textContent = '✅ Perfil updated!';
+    statusLbl.textContent = '✅ Perfil atualizado!';
     statusLbl.style.color = 'var(--primary)';
     setTimeout(closeProfileModal, 1000);
   } catch (e) {
