@@ -292,6 +292,7 @@
   #contacts-list { 
     flex: 1; 
     overflow-y: auto; 
+    document: scroll;
     -webkit-overflow-scrolling: touch; 
   }
   #contacts-list::-webkit-scrollbar { width: 6px; }
@@ -586,13 +587,6 @@
     width: 100%; height: 100%;
     object-fit: cover;
     border-radius: 10px;
-  }
-  .call-controls {
-    padding: 24px;
-    background: rgba(0,0,0,0.85);
-    display: flex;
-    justify-content: center;
-    gap: 20px;
   }
   .call-controls {
     padding: 24px;
@@ -963,6 +957,7 @@ let base64ProfileImage = null;
 
 let activeUnreadListeners = {};
 let activeGlobalMsgListeners = {};
+let activeUserListeners = {};
 
 // =================== RENDERS COMPARTILHADOS ===================
 function applyAvatarStyle(element, obj) {
@@ -1040,6 +1035,8 @@ window.logoutUser = async () => {
   activeUnreadListeners = {};
   Object.keys(activeGlobalMsgListeners).forEach(key => off(activeGlobalMsgListeners[key]));
   activeGlobalMsgListeners = {};
+  Object.keys(activeUserListeners).forEach(key => off(activeUserListeners[key]));
+  activeUserListeners = {};
   await signOut(auth);
 };
 
@@ -1136,83 +1133,75 @@ function listenContactRequests() {
 }
 
 function loadSidebarData() {
-  // Escuta unificada da árvore de contatos do usuário logado
+  if (!currentUser) return;
+
+  // Limpa listeners antigos para não sobrepor loops de memória
+  Object.keys(activeUserListeners).forEach(key => off(activeUserListeners[key]));
+  activeUserListeners = {};
+
+  // Ouve alterações diretas na lista de contatos do usuário logado
   onValue(ref(db, `users/${currentUser.uid}/contacts`), (snap) => {
     const cids = snap.val() || {};
     
-    // Escuta unificada da árvore global de grupos
-    onValue(ref(db, `groups`), (gSnap) => {
-      const allGroups = gSnap.val() || {};
-      itemsList = {}; // Limpa o mapa local para reconstrução ordenada
+    // Processa os contatos de maneira assíncrona, mas isolada
+    Object.keys(cids).forEach(cid => {
+      if (activeUserListeners[cid]) return; // Evita duplicar listeners para o mesmo contato
 
-      const totalPrivados = Object.keys(cids).length;
-      let processadosPrivados = 0;
-
-      // Se não houver contatos privados nem grupos ativos, limpa a tela de imediato
-      if (totalPrivados === 0 && Object.keys(allGroups).length === 0) {
-        renderSidebar();
-        return;
-      }
-
-      // Função interna de controle para renderizar a interface após mapear tudo de forma síncrona
-      function verificarConclusao() {
-        if (processadosPrivados >= totalPrivados) {
-          // Processa os Grupos nos quais o usuário atual participa
-          Object.keys(allGroups).forEach(gid => {
-            const group = allGroups[gid];
-            if (group.members && group.members[currentUser.uid]) {
-              itemsList[gid] = {
-                id: gid,
-                uid: gid,
-                name: group.name,
-                emoji: '👥',
-                color: '#7B61FF',
-                photoUrl: '',
-                online: false,
-                isGroup: true
-              };
-              setupMetadataAndUnreadListener(gid);
-              setupGlobalMessageListener(gid);
-            }
-          });
+      const userRef = ref(db, `users/${cid}`);
+      activeUserListeners[cid] = onValue(userRef, (uSnap) => {
+        if (uSnap.exists()) {
+          const userData = uSnap.val();
+          const chatId = [currentUser.uid, cid].sort().join('_');
+          
+          itemsList[chatId] = {
+            id: chatId,
+            uid: cid,
+            name: userData.name,
+            emoji: userData.emoji || '👤',
+            color: userData.color || '#555',
+            photoUrl: userData.photoUrl || '',
+            online: userData.online || false,
+            isGroup: false
+          };
+          setupMetadataAndUnreadListener(chatId);
+          setupGlobalMessageListener(chatId);
           renderSidebar();
         }
-      }
+      });
+    });
 
-      if (totalPrivados === 0) {
-        verificarConclusao();
-      } else {
-        // Mapeia e ouve os dados de cada contato individualmente em tempo de execução
-        Object.keys(cids).forEach(cid => {
-          onValue(ref(db, `users/${cid}`), (uSnap) => {
-            if (uSnap.exists()) {
-              const userData = uSnap.val();
-              const chatId = [currentUser.uid, cid].sort().join('_');
-              
-              itemsList[chatId] = {
-                id: chatId,
-                uid: cid,
-                name: userData.name,
-                emoji: userData.emoji || '👤',
-                color: userData.color || '#555',
-                photoUrl: userData.photoUrl || '',
-                online: userData.online,
-                isGroup: false
-              };
-              setupMetadataAndUnreadListener(chatId);
-              setupGlobalMessageListener(chatId);
-            }
-            processadosPrivados++;
-            verificarConclusao();
-          });
-        });
+    // Se a lista veio limpa, renderiza para remover loaders
+    if (Object.keys(cids).length === 0) {
+      renderSidebar();
+    }
+  });
+
+  // Ouve alterações globais na árvore de grupos de maneira isolada
+  onValue(ref(db, `groups`), (gSnap) => {
+    const allGroups = gSnap.val() || {};
+    Object.keys(allGroups).forEach(gid => {
+      const group = allGroups[gid];
+      if (group.members && group.members[currentUser.uid]) {
+        itemsList[gid] = {
+          id: gid,
+          uid: gid,
+          name: group.name,
+          emoji: '👥',
+          color: '#7B61FF',
+          photoUrl: '',
+          online: false,
+          isGroup: true
+        };
+        setupMetadataAndUnreadListener(gid);
+        setupGlobalMessageListener(gid);
       }
     });
+    renderSidebar();
   });
 }
 
 function setupMetadataAndUnreadListener(chatId) {
-  if (activeUnreadListeners[chatId]) off(activeUnreadListeners[chatId]);
+  if (activeUnreadListeners[chatId]) return;
 
   const chatMetaRef = ref(db, `chats_metadata/${chatId}`);
   activeUnreadListeners[chatId] = onValue(chatMetaRef, (metaSnap) => {
@@ -1269,7 +1258,7 @@ function setupGlobalMessageListener(chatId) {
 
 function renderSidebar() {
   const el = document.getElementById('contacts-list');
-  el.innerHTML = '';
+  if (!el) return;
   
   const sortedChats = Object.values(itemsList).sort((a, b) => (b.orderTimestamp || 0) - (a.orderTimestamp || 0));
   
@@ -1278,6 +1267,7 @@ function renderSidebar() {
     return;
   }
 
+  el.innerHTML = '';
   sortedChats.forEach(c => {
     const item = document.createElement('div');
     const hasUnread = c.unread > 0;
@@ -1298,9 +1288,9 @@ function renderSidebar() {
         ${hasUnread ? `<div class="badge">${c.unread}</div>` : ''}
       </div>`;
     
-    setTimeout(() => applyAvatarStyle(document.getElementById(avatarId), c), 0);
-    item.onclick = () => openChatView(c);
     el.appendChild(item);
+    applyAvatarStyle(document.getElementById(avatarId), c);
+    item.onclick = () => openChatView(c);
   });
 }
 
@@ -1429,16 +1419,6 @@ function loadMessages(chatId) {
     const msgId = snap.key;
     const msgData = snap.val();
     renderMessage(msgData, msgId, chatId);
-  });
-  
-  onValue(ref(db, `chats_metadata/${chatId}`), (metaSnap) => {
-    if (currentChat && currentChat.id === chatId) {
-      get(messagesRef).then((mSnap) => {
-        mSnap.forEach(child => {
-          renderMessage(child.val(), child.key, chatId);
-        });
-      });
-    }
   });
 }
 
@@ -1579,16 +1559,18 @@ window.addContact = async () => {
     const foundId = idxSnap.val();
     if (foundId === currentUser.uid) { err.textContent = 'Não pode adicionar a si mesmo'; return; }
     
-    // Aloca o relacionamento na árvore do remetente
+    // Vincula na raiz local imediatamente
     await set(ref(db, `users/${currentUser.uid}/contacts/${foundId}`), true);
-    // Dispara a requisição recíproca na árvore do destinatário
+    
+    // Envia requisição recíproca para o amigo/familiar
     await set(ref(db, `contact_requests/${foundId}/${currentUser.uid}`), {
       name: currentUser.displayName, emoji: currentUser.emoji, color: currentUser.color, photoUrl: currentUser.photoUrl
     });
     
-    // Força o gatilho local para reconstruir os estados na barra lateral na mesma hora
-    loadSidebarData();
-    closeAddContact();
+    err.textContent = '✅ Adicionado com sucesso!';
+    setTimeout(() => {
+      closeAddContact();
+    }, 800);
   } catch(e) { err.textContent = '❌ ' + e.message; }
 };
 
@@ -1629,7 +1611,7 @@ function stopCallTimer() { clearInterval(callTimerInterval); document.getElement
 window.rejectCall = () => { document.getElementById('incoming-call').classList.remove('active'); };
 window.acceptCall = async () => { document.getElementById('incoming-call').classList.remove('active'); await startVideoCall(); };
 
-// =================== IMPLEMENTAÇÃO NOTIFICAÇÕES COMPLETAS ===================
+// =================== NOTIFICAÇÕES ===================
 function showNotif(avatarSource, name, text, isPhoto = false, onClickCallback = null) {
   const n = document.createElement('div'); 
   n.className = 'notification';
