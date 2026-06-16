@@ -1084,14 +1084,13 @@ window.saveProfileChanges = async () => {
     let finalPhotoUrl = currentUser.photoUrl || "";
 
     if (base64ProfileImage) {
-      // Tenta salvar no Firebase Storage. Caso as regras estejam bloqueadas, salva em texto Base64 local no Realtime Database.
       try {
         const storageRef = sRef(storage, `profiles/${currentUser.uid}.jpg`);
         await uploadString(storageRef, base64ProfileImage, 'data_url');
         finalPhotoUrl = await getDownloadURL(storageRef);
       } catch (storageErr) {
-        console.warn("Storage bloqueado por regras de precificação/segurança. Salvando imagem local no Database.");
-        finalPhotoUrl = base64ProfileImage; // Fallback estável
+        console.warn("Storage bloqueado. Salvando imagem local no Database.");
+        finalPhotoUrl = base64ProfileImage;
       }
     }
 
@@ -1100,7 +1099,7 @@ window.saveProfileChanges = async () => {
       photoUrl: finalPhotoUrl
     });
 
-    statusLbl.textContent = '✅ Perfil atualizado com sucesso!';
+    statusLbl.textContent = '✅ Perfil updated!';
     statusLbl.style.color = 'var(--primary)';
     setTimeout(closeProfileModal, 1000);
   } catch (e) {
@@ -1127,13 +1126,12 @@ function listenContactRequests() {
 function loadContacts() {
   const myRef = ref(db, `users/${currentUser.uid}/contacts`);
   onValue(myRef, async (snap) => {
-    // 🔥 CORREÇÃO AQUI: Se snap.val() for nulo, usamos um objeto vazio {} para não quebrar o código
     const cids = snap.val() || {}; 
     contacts = {};
     
     const keys = Object.keys(cids);
     if (!keys.length) {
-      renderContacts({}); // Renderiza o estado vazio na tela de forma segura
+      renderContacts({});
       return;
     }
 
