@@ -1030,6 +1030,7 @@ window.logoutUser = async () => {
   activeGlobalMsgListeners = {};
   Object.keys(activeUserListeners).forEach(key => off(activeUserListeners[key]));
   activeUserListeners = {};
+  if (messagesRef) { off(messagesRef); messagesRef = null; }
   await signOut(auth);
 };
 
@@ -1347,6 +1348,11 @@ window.createGroup = async () => {
 
 // =================== REALTIME CHAT VIEW & SYNC ===================
 function openChatView(chatItem) {
+  if (messagesRef) {
+    off(messagesRef);
+    messagesRef = null;
+  }
+
   currentChat = chatItem;
   
   document.querySelectorAll('.contact-item').forEach(el => {
@@ -1385,8 +1391,6 @@ function updateLastSeen(chatId) {
 function loadMessages(chatId) {
   const container = document.getElementById('messages-container');
   container.innerHTML = '';
-  
-  if (messagesRef) off(messagesRef);
   
   messagesRef = ref(db, `messages/${chatId}`);
   
@@ -1504,6 +1508,10 @@ window.sendMessage = async () => {
 
 window.closeChatMobile = () => {
   document.getElementById('app').classList.remove('chat-active');
+  if (messagesRef) {
+    off(messagesRef);
+    messagesRef = null;
+  }
   currentChat = null;
 };
 
