@@ -1127,9 +1127,17 @@ function listenContactRequests() {
 function loadContacts() {
   const myRef = ref(db, `users/${currentUser.uid}/contacts`);
   onValue(myRef, async (snap) => {
-    const cids = snap.val() || {};
+    // 🔥 CORREÇÃO AQUI: Se snap.val() for nulo, usamos um objeto vazio {} para não quebrar o código
+    const cids = snap.val() || {}; 
     contacts = {};
-    Object.keys(cids).forEach((cid) => {
+    
+    const keys = Object.keys(cids);
+    if (!keys.length) {
+      renderContacts({}); // Renderiza o estado vazio na tela de forma segura
+      return;
+    }
+
+    keys.forEach((cid) => {
       onValue(ref(db, `users/${cid}`), (uSnap) => {
         if (uSnap.exists()) {
           contacts[cid] = uSnap.val();
