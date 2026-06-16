@@ -26,6 +26,7 @@
     --avatar-orange: #FF8C00;
     --avatar-pink: #FF4F9A;
     --avatar-blue: #0088CC;
+    --seen-color: #53bdeb;
   }
 
   body {
@@ -193,7 +194,7 @@
     padding: 10px 16px;
     background: var(--bg-input);
   }
-  .sidebar-header-left { display: flex; align-items: center; gap: 10px; }
+  .sidebar-header-left { display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1; }
   
   .my-avatar, .contact-avatar, .profile-preview-container {
     width: 40px; height: 40px; border-radius: 50%;
@@ -205,8 +206,8 @@
     flex-shrink: 0;
     overflow: hidden;
   }
-  .my-name { font-size: 15px; font-weight: 600; cursor: pointer; color: var(--text-primary); }
-  .sidebar-actions { display: flex; gap: 8px; }
+  .my-name { font-size: 15px; font-weight: 600; cursor: pointer; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .sidebar-actions { display: flex; gap: 4px; flex-shrink: 0; }
   
   .back-btn {
     display: none;
@@ -223,7 +224,8 @@
   }
   .chat-header-info { flex: 1; min-width: 0; }
   .chat-header-name { font-size: 16px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .chat-header-status { font-size: 13px; color: var(--primary); margin-top: 1px; }
+  .chat-header-status { font-size: 13px; color: var(--text-secondary); margin-top: 1px; }
+  .chat-header-status.online { color: var(--primary); }
   .chat-header-actions { display: flex; gap: 4px; }
   
   .video-btn {
@@ -249,7 +251,7 @@
     padding: 16px;
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 6px;
     -webkit-overflow-scrolling: touch;
   }
   .icon-btn {
@@ -320,16 +322,19 @@
   .contact-info { flex: 1; min-width: 0; }
   .contact-name { font-size: 15px; font-weight: 500; color: var(--text-primary); }
   .contact-last { font-size: 13px; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
-  .contact-meta { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+  .contact-item.unread-style .contact-last { color: var(--text-primary); font-weight: 500; }
+  .contact-meta { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; justify-content: center; }
   .contact-time { font-size: 12px; color: var(--text-secondary); }
+  .contact-item.unread-style .contact-time { color: var(--primary); }
   .badge {
     background: var(--primary);
-    color: white;
+    color: #0b141a;
     border-radius: 50%;
-    width: 20px; height: 20px;
-    font-size: 11px;
+    min-width: 20px; height: 20px;
+    padding: 0 4px;
+    font-size: 12px;
     display: flex; align-items: center; justify-content: center;
-    font-weight: 600;
+    font-weight: bold;
   }
 
   /* ===== MODAIS ===== */
@@ -374,6 +379,26 @@
   }
   .profile-preview-container:hover .change-pic-overlay { opacity: 1; }
   .change-pic-overlay svg { color: white; width: 24px; height: 24px; }
+
+  /* ===== MULTISELECT PARA GRUPOS ===== */
+  .group-members-list {
+    max-height: 150px;
+    overflow-y: auto;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 4px;
+    background: var(--bg-chat);
+  }
+  .member-select-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px;
+    cursor: pointer;
+    border-radius: 6px;
+  }
+  .member-select-item:hover { background: var(--hover); }
+  .member-select-item input { cursor: pointer; width: 16px; height: 16px; }
 
   /* ===== CHAT AREA ===== */
   #chat-area {
@@ -443,7 +468,8 @@
     margin-top: 3px;
   }
   .msg-time { font-size: 11px; color: var(--text-time); }
-  .msg-check { font-size: 13px; color: var(--primary); }
+  .msg-check { font-size: 14px; color: var(--text-secondary); line-height: 1; display: inline-flex; }
+  .msg-check.seen { color: var(--seen-color); }
   .msg-emoji { font-size: 28px; background: none !important; padding: 4px 0; }
 
   /* ===== INPUT AREA ===== */
@@ -721,6 +747,9 @@
         <span class="my-name" id="my-name-display" onclick="openProfileModal()"></span>
       </div>
       <div class="sidebar-actions">
+        <button class="icon-btn" onclick="showCreateGroup()" title="Criar Grupo">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </button>
         <button class="icon-btn" onclick="showAddContact()" title="Adicionar contato">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
         </button>
@@ -732,7 +761,7 @@
     <div class="search-bar">
       <div class="search-input-wrap">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--text-secondary)"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-        <input placeholder="Pesquisar ou iniciar conversa" id="search-input" oninput="filterContacts()">
+        <input placeholder="Pesquisar conversas ou grupos" id="search-input" oninput="filterContacts()">
       </div>
     </div>
     <div id="contacts-list">
@@ -763,7 +792,7 @@
           <div class="chat-header-status" id="chat-header-status">online</div>
         </div>
         <div class="chat-header-actions">
-          <button class="video-btn" onclick="startVideoCall()">
+          <button class="video-btn" id="call-action-btn" onclick="startVideoCall()">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/></svg>
             <span>Videochamada</span>
           </button>
@@ -818,6 +847,21 @@
     <input class="auth-input" id="contact-email-input" type="email" placeholder="E-mail do familiar ou amigo" inputmode="email">
     <div class="auth-error" id="add-contact-error"></div>
     <button class="auth-btn" onclick="addContact()">Adicionar</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="create-group-modal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeCreateGroup()">✕</button>
+    <h3>Criar Novo Grupo</h3>
+    <p style="font-size:13px;color:var(--text-secondary)">Defina o nome do grupo e selecione quem fará parte dele</p>
+    <input class="auth-input" id="group-name-input" type="text" placeholder="Nome do Grupo">
+    
+    <div style="font-size:13px;font-weight:500;margin-top:4px">Selecione os Membros:</div>
+    <div class="group-members-list" id="group-members-choices"></div>
+    
+    <div class="auth-error" id="create-group-error"></div>
+    <button class="auth-btn" onclick="createGroup()">Criar Grupo</button>
   </div>
 </div>
 
@@ -877,7 +921,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import {
   getDatabase, ref, set, get, onValue, push, serverTimestamp,
-  onChildAdded, off, update, onDisconnect, remove
+  onChildAdded, onChildChanged, off, update, onDisconnect, remove
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
 // =================== FIREBASE CONFIG ===================
@@ -897,9 +941,9 @@ const db = getDatabase(app);
 
 // =================== STATE ===================
 let currentUser = null;
-let currentContact = null;
+let currentChat = null; // Pode ser contato ou grupo
 let selectedAvatar = { emoji: "🦁", color: "#FFA500" };
-let contacts = {};
+let itemsList = {}; // Armazena contatos E grupos unificados
 let messagesRef = null;
 let callTimerInterval = null;
 let callSeconds = 0;
@@ -907,21 +951,22 @@ let localStream = null;
 let peerConnection = null;
 let muted = false;
 let cameraOff = false;
-let unsubscribeMessages = null;
-let isChatLoading = false;
 let base64ProfileImage = null;
 
+// Listeners ativos para controlar estados de não lido por chat
+let activeUnreadListeners = {};
+
 // =================== RENDERS COMPARTILHADOS ===================
-function applyAvatarStyle(element, userObj) {
-  if (!element || !userObj) return;
-  if (userObj.photoUrl) {
-    element.style.backgroundImage = `url('${userObj.photoUrl}')`;
+function applyAvatarStyle(element, obj) {
+  if (!element || !obj) return;
+  if (obj.photoUrl) {
+    element.style.backgroundImage = `url('${obj.photoUrl}')`;
     element.textContent = '';
     element.style.backgroundColor = 'transparent';
   } else {
     element.style.backgroundImage = 'none';
-    element.textContent = userObj.emoji || '👤';
-    element.style.background = userObj.color || '#555';
+    element.textContent = obj.emoji || (obj.isGroup ? '👥' : '👤');
+    element.style.background = obj.color || '#555';
   }
 }
 
@@ -983,6 +1028,9 @@ window.logoutUser = async () => {
   if (currentUser) {
     await update(ref(db, `users/${currentUser.uid}`), { online: false });
   }
+  // Limpar listeners de não lidas
+  Object.keys(activeUnreadListeners).forEach(key => off(activeUnreadListeners[key]));
+  activeUnreadListeners = {};
   await signOut(auth);
 };
 
@@ -1014,12 +1062,12 @@ onAuthStateChanged(auth, async (user) => {
 function showApp() {
   document.getElementById('auth-screen').style.display = 'none';
   document.getElementById('app').classList.add('visible');
-  loadContacts();
+  loadSidebarData();
   buildEmojiPanel();
   listenContactRequests();
 }
 
-// =================== PROFILE MODAL LÓGICA ===================
+// =================== PROFILE MODAL ===================
 window.openProfileModal = () => {
   document.getElementById('profile-modal').classList.add('visible');
   document.getElementById('profile-name-input').value = currentUser.displayName;
@@ -1028,30 +1076,22 @@ window.openProfileModal = () => {
   applyAvatarStyle(document.getElementById('profile-preview-avatar'), currentUser);
 };
 
-window.closeProfileModal = () => {
-  document.getElementById('profile-modal').classList.remove('visible');
-};
+window.closeProfileModal = () => { document.getElementById('profile-modal').classList.remove('visible'); };
 
-window.triggerFileInput = () => {
-  document.getElementById('profile-file-input').click();
-};
+window.triggerFileInput = () => { document.getElementById('profile-file-input').click(); };
 
 window.handleProfilePicture = (input) => {
   const file = input.files[0];
   if (!file) return;
-
   const reader = new FileReader();
   reader.onload = (e) => {
     const img = new Image();
     img.onload = () => {
       const canvas = document.createElement('canvas');
-      canvas.width = 200;
-      canvas.height = 200;
+      canvas.width = 200; canvas.height = 200;
       const ctx = canvas.getContext('2d');
       ctx.drawImage(img, 0, 0, 200, 200);
-      
       base64ProfileImage = canvas.toDataURL('image/jpeg', 0.8);
-      
       const preview = document.getElementById('profile-preview-avatar');
       preview.style.backgroundImage = `url('${base64ProfileImage}')`;
       preview.textContent = '';
@@ -1064,112 +1104,150 @@ window.handleProfilePicture = (input) => {
 window.saveProfileChanges = async () => {
   const newName = document.getElementById('profile-name-input').value.trim();
   const statusLbl = document.getElementById('profile-error');
-  const btn = document.getElementById('save-profile-btn');
-  
-  if (!newName) {
-    statusLbl.textContent = '❌ O nome não pode estar vazio.';
-    statusLbl.style.color = '#FF4444';
-    return;
-  }
-
-  statusLbl.textContent = '⏳ Salvando alterações...';
-  statusLbl.style.color = 'var(--primary)';
-  if (btn) btn.disabled = true;
-
+  if (!newName) { statusLbl.textContent = '❌ Nome não pode ser vazio.'; return; }
+  statusLbl.textContent = '⏳ Salvando...';
   try {
     let finalPhotoUrl = currentUser.photoUrl || "";
-
-    if (base64ProfileImage) {
-      finalPhotoUrl = base64ProfileImage;
-    }
-
-    await update(ref(db, `users/${currentUser.uid}`), {
-      name: newName,
-      photoUrl: finalPhotoUrl
-    });
-
-    statusLbl.textContent = '✅ Perfil atualizado!';
-    statusLbl.style.color = 'var(--primary)';
+    if (base64ProfileImage) finalPhotoUrl = base64ProfileImage;
+    await update(ref(db, `users/${currentUser.uid}`), { name: newName, photoUrl: finalPhotoUrl });
+    statusLbl.textContent = '✅ Sucesso!';
     setTimeout(closeProfileModal, 1000);
-  } catch (e) {
-    statusLbl.textContent = '❌ Erro ao salvar: ' + e.message;
-    statusLbl.style.color = '#FF4444';
-  } finally {
-    if (btn) btn.disabled = false;
-  }
+  } catch (e) { statusLbl.textContent = '❌ Erro: ' + e.message; }
 };
 
-// =================== CONTACTS ===================
+// =================== CONTATOS E GRUPOS (SIDEBAR) ===================
 function listenContactRequests() {
   if (!currentUser) return;
-  const reqRef = ref(db, `contact_requests/${currentUser.uid}`);
-  onChildAdded(reqRef, async (snap) => {
-    const requesterId = snap.key;
-    const requesterData = snap.val();
-    await set(ref(db, `users/${currentUser.uid}/contacts/${requesterId}`), true);
-    await remove(ref(db, `contact_requests/${currentUser.uid}/${requesterId}`));
-    showNotif(requesterData.photoUrl || requesterData.emoji || '👤', requesterData.name || 'Familiar ou amigo', 'te adicionou como contato! 💚', !!requesterData.photoUrl);
+  onChildAdded(ref(db, `contact_requests/${currentUser.uid}`), async (snap) => {
+    const rId = snap.key; const rData = snap.val();
+    await set(ref(db, `users/${currentUser.uid}/contacts/${rId}`), true);
+    await remove(ref(db, `contact_requests/${currentUser.uid}/${rId}`));
+    showNotif(rData.photoUrl || rData.emoji || '👤', rData.name, 'te adicionou! 💚', !!rData.photoUrl);
   });
 }
 
-function loadContacts() {
-  const myRef = ref(db, `users/${currentUser.uid}/contacts`);
-  onValue(myRef, async (snap) => {
-    const cids = snap.val() || {}; 
-    contacts = {};
+function loadSidebarData() {
+  // Escuta contatos individuais
+  onValue(ref(db, `users/${currentUser.uid}/contacts`), (snap) => {
+    const cids = snap.val() || {};
     
-    const keys = Object.keys(cids);
-    if (!keys.length) {
-      renderContacts({});
-      return;
-    }
+    // Escuta também os grupos existentes
+    onValue(ref(db, `groups`), (gSnap) => {
+      const allGroups = gSnap.val() || {};
+      itemsList = {};
 
-    keys.forEach((cid) => {
-      onValue(ref(db, `users/${cid}`), (uSnap) => {
-        if (uSnap.exists()) {
-          contacts[cid] = uSnap.val();
-          renderContacts(contacts);
-          if (currentContact && currentContact.uid === cid) {
-            document.getElementById('chat-header-name').textContent = contacts[cid].name;
-            applyAvatarStyle(document.getElementById('chat-header-avatar'), contacts[cid]);
+      // 1. Processar Contatos
+      Object.keys(cids).forEach(cid => {
+        onValue(ref(db, `users/${cid}`), (uSnap) => {
+          if (uSnap.exists()) {
+            const userData = uSnap.val();
+            const chatId = [currentUser.uid, cid].sort().join('_');
+            
+            itemsList[chatId] = {
+              id: chatId,
+              uid: cid,
+              name: userData.name,
+              emoji: userData.emoji || '👤',
+              color: userData.color || '#555',
+              photoUrl: userData.photoUrl || '',
+              online: userData.online,
+              isGroup: false
+            };
+            setupMetadataAndUnreadListener(chatId);
           }
+        });
+      });
+
+      // 2. Processar Grupos onde sou membro
+      Object.keys(allGroups).forEach(gid => {
+        const group = allGroups[gid];
+        if (group.members && group.members[currentUser.uid]) {
+          itemsList[gid] = {
+            id: gid,
+            uid: gid,
+            name: group.name,
+            emoji: '👥',
+            color: '#7B61FF',
+            photoUrl: '',
+            online: false,
+            isGroup: true
+          };
+          setupMetadataAndUnreadListener(gid);
         }
       });
+      
+      if (Object.keys(cids).length === 0 && Object.keys(allGroups).length === 0) {
+        renderSidebar();
+      }
     });
   });
 }
 
-function renderContacts(list) {
+function setupMetadataAndUnreadListener(chatId) {
+  // Desliga o listener anterior se houver para evitar duplicidade
+  if (activeUnreadListeners[chatId]) off(activeUnreadListeners[chatId]);
+
+  const chatMetaRef = ref(db, `chats_metadata/${chatId}`);
+  activeUnreadListeners[chatId] = onValue(chatMetaRef, (metaSnap) => {
+    const meta = metaSnap.val() || {};
+    if (itemsList[chatId]) {
+      itemsList[chatId].lastMsg = meta.lastMsg || '';
+      itemsList[chatId].lastTime = meta.lastTime || '';
+      itemsList[chatId].orderTimestamp = meta.timestamp || 0;
+      
+      // Contar mensagens não lidas localmente com base no último visto
+      const lastSeen = (meta.lastSeenUsers && meta.lastSeenUsers[currentUser.uid]) || 0;
+      
+      get(ref(db, `messages/${chatId}`)).then((msgSnap) => {
+        let unreadCount = 0;
+        msgSnap.forEach((mChild) => {
+          const m = mChild.val();
+          if (m.senderId !== currentUser.uid && (!m.ts || m.ts > lastSeen)) {
+            unreadCount++;
+          }
+        });
+        
+        itemsList[chatId].unread = unreadCount;
+        renderSidebar();
+      });
+    }
+  });
+}
+
+function renderSidebar() {
   const el = document.getElementById('contacts-list');
   el.innerHTML = '';
-  const keys = Object.keys(list);
-  if (!keys.length) {
-    el.innerHTML = '<div style="padding:40px;text-align:center;color:var(--text-secondary);font-size:14px">Adicione um familiar ou amigo para começar a conversar 💚</div>';
+  
+  // Ordena os chats pela data da última mensagem recebida
+  const sortedChats = Object.values(itemsList).sort((a, b) => (b.orderTimestamp || 0) - (a.orderTimestamp || 0));
+  
+  if (!sortedChats.length) {
+    el.innerHTML = '<div style="padding:40px;text-align:center;color:var(--text-secondary);font-size:14px">Adicione um amigo ou crie um grupo para começar 💚</div>';
     return;
   }
-  keys.forEach(uid => {
-    const c = list[uid];
+
+  sortedChats.forEach(c => {
     const item = document.createElement('div');
-    item.className = 'contact-item';
-    item.dataset.uid = uid;
+    const hasUnread = c.unread > 0;
+    item.className = `contact-item ${hasUnread ? 'unread-style' : ''}`;
+    if (currentChat && currentChat.id === c.id) item.classList.add('active');
     
-    const avatarId = `avatar-render-${uid}`;
+    const avatarId = `sidebar-avatar-${c.id}`;
     item.innerHTML = `
       <div class="contact-avatar" id="${avatarId}">
-        ${c.online ? '<div class="online-dot"></div>' : ''}
+        ${(!c.isGroup && c.online) ? '<div class="online-dot"></div>' : ''}
       </div>
       <div class="contact-info">
         <div class="contact-name">${c.name}</div>
-        <div class="contact-last">${c.lastMsg || 'Toque para conversar'}</div>
+        <div class="contact-last">${c.lastMsg || (c.isGroup ? 'Grupo criado' : 'Toque para conversar')}</div>
       </div>
       <div class="contact-meta">
         <div class="contact-time">${c.lastTime || ''}</div>
-        ${c.unread ? `<div class="badge">${c.unread}</div>` : ''}
+        ${hasUnread ? `<div class="badge">${c.unread}</div>` : ''}
       </div>`;
     
     setTimeout(() => applyAvatarStyle(document.getElementById(avatarId), c), 0);
-    
-    item.onclick = () => openChat(uid, c);
+    item.onclick = () => openChatView(c);
     el.appendChild(item);
   });
 }
@@ -1182,187 +1260,254 @@ window.filterContacts = () => {
   });
 };
 
-window.showAddContact = () => {
-  document.getElementById('add-contact-modal').classList.add('visible');
-  document.getElementById('contact-email-input').value = '';
-  document.getElementById('add-contact-error').textContent = '';
-};
-window.closeAddContact = () => {
-  document.getElementById('add-contact-modal').classList.remove('visible');
+// =================== MODAL GRUPOS LÓGICA ===================
+window.showCreateGroup = () => {
+  document.getElementById('create-group-modal').classList.add('visible');
+  document.getElementById('group-name-input').value = '';
+  document.getElementById('create-group-error').textContent = '';
+  
+  const choices = document.getElementById('group-members-choices');
+  choices.innerHTML = '';
+  
+  // Lista apenas contatos individuais para adicionar ao grupo
+  Object.values(itemsList).forEach(item => {
+    if (!item.isGroup) {
+      const div = document.createElement('label');
+      div.className = 'member-select-item';
+      div.innerHTML = `<input type="checkbox" value="${item.uid}"> <span>${item.name}</span>`;
+      choices.appendChild(div);
+    }
+  });
 };
 
-window.addContact = async () => {
-  const email = document.getElementById('contact-email-input').value.trim();
-  const err = document.getElementById('add-contact-error');
+window.closeCreateGroup = () => { document.getElementById('create-group-modal').classList.remove('visible'); };
 
-  err.textContent = '🔍 Buscando...';
-  err.style.color = '#8696A0';
+window.createGroup = async () => {
+  const gName = document.getElementById('group-name-input').value.trim();
+  const err = document.getElementById('create-group-error');
+  if(!gName) { err.textContent = '❌ Digite um nome para o grupo'; return; }
+  
+  const selectedCheckboxes = document.querySelectorAll('#group-members-choices input:checked');
+  const members = {};
+  members[currentUser.uid] = true; // Você mesmo
+  
+  selectedCheckboxes.forEach(cb => { members[cb.value] = true; });
 
   try {
-    const emailKey = email.toLowerCase().replace(/\./g, ',');
-    const idxSnap = await get(ref(db, `email_index/${emailKey}`));
-
-    if (!idxSnap.exists()) {
-      err.textContent = '❌ Usuário não encontrado. Verifique o e-mail.';
-      err.style.color = '#FF4444';
-      return;
-    }
-
-    const foundId = idxSnap.val();
-    if (foundId === currentUser.uid) {
-      err.textContent = 'Não pode adicionar a si mesmo';
-      err.style.color = '#FF4444';
-      return;
-    }
-
-    const alreadySnap = await get(ref(db, `users/${currentUser.uid}/contacts/${foundId}`));
-    if (alreadySnap.exists()) {
-      err.textContent = '⚠️ Este familiar ou amigo já está na sua lista';
-      err.style.color = '#FFA500';
-      return;
-    }
-
-    const userSnap = await get(ref(db, `users/${foundId}`));
-    const foundUser = userSnap.exists() ? userSnap.val() : { name: email.split('@')[0], emoji: '👤', color: '#555' };
-
-    await set(ref(db, `users/${currentUser.uid}/contacts/${foundId}`), true);
-
-    await set(ref(db, `contact_requests/${foundId}/${currentUser.uid}`), {
-      name: currentUser.displayName,
-      emoji: currentUser.emoji || '🦁',
-      color: currentUser.color || '#FFA500',
-      photoUrl: currentUser.photoUrl || '',
-      email: currentUser.email || '',
-      ts: Date.now()
+    const groupRef = push(ref(db, 'groups'));
+    const gid = groupRef.key;
+    
+    const groupData = {
+      id: gid,
+      name: gName,
+      createdAt: serverTimestamp(),
+      createdBy: currentUser.uid,
+      members: members
+    };
+    
+    await set(groupRef, groupData);
+    
+    // Inicializa metadados do grupo
+    await set(ref(db, `chats_metadata/${gid}`), {
+      lastMsg: 'Grupo criado 🎉',
+      lastTime: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+      timestamp: serverTimestamp()
     });
 
-    err.textContent = '';
-    closeAddContact();
-    showNotif(foundUser.photoUrl || foundUser.emoji || '👤', foundUser.name || email, 'Familiar ou amigo adicionado! ✅', !!foundUser.photoUrl);
-  } catch(e) {
-    err.style.color = '#FF4444';
-    err.textContent = '❌ ' + (e.message || 'Erro desconhecido');
-  }
+    closeCreateGroup();
+  } catch(e) { err.textContent = '❌ Eror ao criar: ' + e.message; }
 };
 
-// =================== CHAT VIEW LÓGICA ===================
-function loadMessages(contactId) {
-  if (isChatLoading) return;
-  isChatLoading = true;
-
-  const container = document.getElementById('messages-container');
-  container.innerHTML = '';
-  
-  if (messagesRef) {
-    off(messagesRef, 'child_added');
-  }
-  unsubscribeMessages = null;
-
-  const chatId = getChatId(currentUser.uid, contactId);
-  messagesRef = ref(db, `messages/${chatId}`);
-  
-  const handler = (snap) => {
-    const msgId = snap.key;
-    if (document.getElementById(`msg-${msgId}`)) return;
-
-    renderMessage(snap.val(), msgId);
-    scrollBottom();
-  };
-
-  onChildAdded(messagesRef, handler);
-  unsubscribeMessages = handler;
-
-  setTimeout(() => { isChatLoading = false; }, 400);
-}
-
-function renderMessage(msg, msgId) {
-  const container = document.getElementById('messages-container');
-  if (document.getElementById(`msg-${msgId}`)) return;
-
-  const isSent = msg.senderId === currentUser.uid;
-  const div = document.createElement('div');
-  const isOnlyEmoji = /^[\p{Emoji}\s]{1,3}$/u.test(msg.text);
-  
-  div.id = `msg-${msgId}`;
-  div.className = `message ${isSent ? 'sent' : 'received'} ${isOnlyEmoji ? 'msg-emoji' : ''}`;
-  
-  const t = msg.ts ? new Date(msg.ts) : new Date();
-  const time = `${t.getHours().toString().padStart(2,'0')}:${t.getMinutes().toString().padStart(2,'0')}`;
-  
-  div.innerHTML = `
-    ${!isSent ? `<div class="msg-sender">${msg.senderName || ''}</div>` : ''}
-    <div class="msg-text">${escapeHtml(msg.text)}</div>
-    <div class="msg-meta">
-      <span class="msg-time">${time}</span>
-      ${isSent ? '<span class="msg-check">✓✓</span>' : ''}
-    </div>`;
-  container.appendChild(div);
-}
-
-function openChat(uid, contact) {
-  currentContact = { uid, ...contact };
+// =================== CHAT VIEW (MENSAGENS E SEEN) ===================
+function openChatView(chatItem) {
+  currentChat = chatItem;
   
   document.querySelectorAll('.contact-item').forEach(el => {
-    el.classList.toggle('active', el.dataset.uid === uid);
+    el.classList.toggle('active', el.dataset.uid === chatItem.uid);
   });
   
   document.getElementById('empty-state').style.display = 'none';
   document.getElementById('chat-view').classList.add('visible');
   document.getElementById('app').classList.add('chat-active');
 
-  applyAvatarStyle(document.getElementById('chat-header-avatar'), contact);
-  document.getElementById('chat-header-name').textContent = contact.name;
-  document.getElementById('chat-header-status').textContent = contact.online ? 'online' : 'offline';
+  applyAvatarStyle(document.getElementById('chat-header-avatar'), chatItem);
+  document.getElementById('chat-header-name').textContent = chatItem.name;
   
-  loadMessages(uid);
+  // Ajuste do cabeçalho caso seja grupo ou individual
+  const statusEl = document.getElementById('chat-header-status');
+  const callBtn = document.getElementById('call-action-btn');
+  
+  if (chatItem.isGroup) {
+    statusEl.textContent = 'Grupo';
+    statusEl.classList.remove('online');
+    callBtn.style.display = 'none'; // Desabilita chamada de vídeo para grupos
+  } else {
+    statusEl.textContent = chatItem.online ? 'online' : 'offline';
+    statusEl.classList.toggle('online', chatItem.online);
+    callBtn.style.display = 'flex';
+  }
+  
+  // Atualiza seu visto neste exato momento (Corrige o bug do visto)
+  updateLastSeen(chatItem.id);
+  loadMessages(chatItem.id);
 }
 
-window.closeChatMobile = () => {
-  document.getElementById('app').classList.remove('chat-active');
-  currentContact = null;
-};
-
-function getChatId(a, b) {
-  return [a, b].sort().join('_');
+function updateLastSeen(chatId) {
+  const now = Date.now();
+  // Atualiza na nuvem a hora que você entrou/viu o chat
+  set(ref(db, `chats_metadata/${chatId}/lastSeenUsers/${currentUser.uid}`), now);
 }
 
-function escapeHtml(t) {
-  return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+function loadMessages(chatId) {
+  const container = document.getElementById('messages-container');
+  container.innerHTML = '';
+  
+  if (messagesRef) off(messagesRef);
+  
+  messagesRef = ref(db, `messages/${chatId}`);
+  
+  // 1. Escuta novas mensagens adicionadas
+  onChildAdded(messagesRef, (snap) => {
+    const msgId = snap.key;
+    const msgData = snap.val();
+    
+    // Se a janela estiver aberta e a mensagem for da outra pessoa, marca como lido imediatamente
+    if (currentChat && currentChat.id === chatId && msgData.senderId !== currentUser.uid) {
+      updateLastSeen(chatId);
+    }
+    
+    renderMessage(msgData, msgId, chatId);
+    scrollBottom();
+  });
+
+  // 2. Escuta mudanças nas mensagens (para atualizar o check de azul/visto em tempo real)
+  onChildChanged(messagesRef, (snap) => {
+    const msgId = snap.key;
+    const msgData = snap.val();
+    renderMessage(msgData, msgId, chatId);
+  });
+  
+  // Monitoramento contínuo dos vistos das outras pessoas neste chat
+  onValue(ref(db, `chats_metadata/${chatId}`), (metaSnap) => {
+    if (currentChat && currentChat.id === chatId) {
+      // Re-renderiza mensagens para validar se os checks precisam mudar de cor
+      get(messagesRef).then((mSnap) => {
+        mSnap.forEach(child => {
+          renderMessage(child.val(), child.key, chatId);
+        });
+      });
+    }
+  });
 }
 
-function scrollBottom() {
-  const c = document.getElementById('messages-container');
-  setTimeout(() => { if (c) c.scrollTop = c.scrollHeight; }, 50);
+function renderMessage(msg, msgId, chatId) {
+  const container = document.getElementById('messages-container');
+  let div = document.getElementById(`msg-${msgId}`);
+  
+  if (!div) {
+    div = document.createElement('div');
+    div.id = `msg-${msgId}`;
+    container.appendChild(div);
+  }
+
+  const isSent = msg.senderId === currentUser.uid;
+  const isOnlyEmoji = /^[\p{Emoji}\s]{1,3}$/u.test(msg.text);
+  
+  div.className = `message ${isSent ? 'sent' : 'received'} ${isOnlyEmoji ? 'msg-emoji' : ''}`;
+  
+  const t = msg.ts ? new Date(msg.ts) : new Date();
+  const time = `${t.getHours().toString().padStart(2,'0')}:${t.getMinutes().toString().padStart(2,'0')}`;
+  
+  // Determinar o status de visualização (Seen / Lidas)
+  let checkClass = '';
+  
+  // Buscar metadados para checar quem visualizou
+  get(ref(db, `chats_metadata/${chatId}`)).then((metaSnap) => {
+    const meta = metaSnap.val() || {};
+    const lastSeenUsers = meta.lastSeenUsers || {};
+    
+    if (isSent && msg.ts) {
+      if (currentChat && currentChat.isGroup) {
+        // Para grupos: fica azul se todos viram (ou outros membros viram)
+        let totalOutros = 0;
+        let viramOutros = 0;
+        
+        get(ref(db, `groups/${chatId}/members`)).then(mSnap => {
+          const members = mSnap.val() || {};
+          Object.keys(members).forEach(uid => {
+            if (uid !== currentUser.uid) {
+              totalOutros++;
+              if (lastSeenUsers[uid] && lastSeenUsers[uid] >= msg.ts) {
+                viramOutros++;
+              }
+            }
+          });
+          if (viramOutros > 0 && viramOutros === totalOutros) {
+            const checkIcon = div.querySelector('.msg-check');
+            if (checkIcon) checkIcon.classList.add('seen');
+          }
+        });
+      } else {
+        // Para privado: fica azul se o destinatário já tinha o chat aberto após o timestamp da mensagem
+        const destinatarioId = currentChat.uid;
+        if (lastSeenUsers[destinatarioId] && lastSeenUsers[destinatarioId] >= msg.ts) {
+          checkClass = 'seen';
+        }
+      }
+    }
+    
+    div.innerHTML = `
+      ${(!isSent && currentChat && currentChat.isGroup) ? `<div class="msg-sender">${msg.senderName || ''}</div>` : ''}
+      <div class="msg-text">${escapeHtml(msg.text)}</div>
+      <div class="msg-meta">
+        <span class="msg-time">${time}</span>
+        ${isSent ? `<span class="msg-check ${checkClass}">✓✓</span>` : ''}
+      </div>`;
+  });
 }
 
 window.sendMessage = async () => {
   const input = document.getElementById('msg-input');
   const text = input.value.trim();
-  if (!text || !currentContact) return;
+  if (!text || !currentChat) return;
   input.value = '';
+
+  const timestampDisparado = Date.now();
 
   const msg = {
     text,
     senderId: currentUser.uid,
     senderName: currentUser.displayName,
-    ts: serverTimestamp()
+    ts: timestampDisparado
   };
 
-  const chatId = getChatId(currentUser.uid, currentContact.uid);
+  const chatId = currentChat.id;
+  
+  // Salva mensagem
   await push(ref(db, `messages/${chatId}`), msg);
   
+  // Atualiza metadados globais da conversa (última mensagem e ordenação automática)
   const horaAtual = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-  await update(ref(db, `users/${currentUser.uid}/contacts/${currentContact.uid}`), { 
-    lastMsg: text, 
-    lastTime: horaAtual 
-  });
+  
+  const updates = {
+    lastMsg: text,
+    lastTime: horaAtual,
+    timestamp: timestampDisparado
+  };
+  
+  await update(ref(db, `chats_metadata/${chatId}`), updates);
+  updateLastSeen(chatId);
 };
 
-window.clearChat = () => {
-  if (confirm('Limpar mensagens desta conversa?')) {
-    document.getElementById('messages-container').innerHTML = '';
-  }
+window.closeChatMobile = () => {
+  document.getElementById('app').classList.remove('chat-active');
+  currentChat = null;
 };
+
+function getChatId(a, b) { return [a, b].sort().join('_'); }
+function escapeHtml(t) { return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function scrollBottom() { const c = document.getElementById('messages-container'); setTimeout(() => { if (c) c.scrollTop = c.scrollHeight; }, 50); }
+window.clearChat = () => { if (confirm('Limpar mensagens desta conversa?')) document.getElementById('messages-container').innerHTML = ''; };
 
 // =================== EMOJI PANEL ===================
 function buildEmojiPanel() {
@@ -1370,70 +1515,65 @@ function buildEmojiPanel() {
   const panel = document.getElementById('emoji-panel');
   panel.innerHTML = emojis.map(e => `<span class="ep-emoji" onclick="insertEmoji('${e}')">${e}</span>`).join('');
 }
-
-window.toggleEmoji = () => {
-  document.getElementById('emoji-panel').classList.toggle('visible');
-};
-
+window.toggleEmoji = () => { document.getElementById('emoji-panel').classList.toggle('visible'); };
 window.insertEmoji = (e) => {
-  const inp = document.getElementById('msg-input');
-  inp.value += e;
-  inp.focus();
+  const inp = document.getElementById('msg-input'); inp.value += e; inp.focus();
   document.getElementById('emoji-panel').classList.remove('visible');
 };
-
 document.addEventListener('click', (e) => {
-  if (!e.target.closest('.emoji-btn') && !e.target.closest('#emoji-panel')) {
-    document.getElementById('emoji-panel').classList.remove('visible');
-  }
+  if (!e.target.closest('.emoji-btn') && !e.target.closest('#emoji-panel')) document.getElementById('emoji-panel').classList.remove('visible');
 });
+
+// =================== ADICIONAR CONTATO CONVENCIONAL ===================
+window.showAddContact = () => {
+  document.getElementById('add-contact-modal').classList.add('visible');
+  document.getElementById('contact-email-input').value = '';
+  document.getElementById('add-contact-error').textContent = '';
+};
+window.closeAddContact = () => { document.getElementById('add-contact-modal').classList.remove('visible'); };
+
+window.addContact = async () => {
+  const email = document.getElementById('contact-email-input').value.trim();
+  const err = document.getElementById('add-contact-error');
+  err.textContent = '🔍 Buscando...';
+  try {
+    const emailKey = email.toLowerCase().replace(/\./g, ',');
+    const idxSnap = await get(ref(db, `email_index/${emailKey}`));
+    if (!idxSnap.exists()) { err.textContent = '❌ Usuário não encontrado.'; return; }
+    const foundId = idxSnap.val();
+    if (foundId === currentUser.uid) { err.textContent = 'Não pode adicionar a si mesmo'; return; }
+    
+    await set(ref(db, `users/${currentUser.uid}/contacts/${foundId}`), true);
+    await set(ref(db, `contact_requests/${foundId}/${currentUser.uid}`), {
+      name: currentUser.displayName, emoji: currentUser.emoji, color: currentUser.color, photoUrl: currentUser.photoUrl
+    });
+    closeAddContact();
+  } catch(e) { err.textContent = '❌ ' + e.message; }
+};
 
 // =================== VIDEO CALL LÓGICA ===================
 window.startVideoCall = async () => {
-  if (!currentContact) return;
+  if (!currentChat || currentChat.isGroup) return;
   document.getElementById('video-call').classList.add('active');
-  const remote = document.getElementById('remote-call-avatar');
-  remote.style.display = 'flex';
-  remote.style.flexDirection = 'column';
-  remote.style.alignItems = 'center';
-  
-  applyAvatarStyle(document.getElementById('remote-avatar-emoji'), currentContact);
-  document.getElementById('remote-call-name').textContent = currentContact.name;
+  const remote = document.getElementById('remote-call-avatar'); remote.style.display = 'flex'; remote.style.flexDirection = 'column'; remote.style.alignItems = 'center';
+  applyAvatarStyle(document.getElementById('remote-avatar-emoji'), currentChat);
+  document.getElementById('remote-call-name').textContent = currentChat.name;
   document.getElementById('call-status-text').textContent = 'Chamando...';
   try {
     localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
     document.getElementById('localVideo').srcObject = localStream;
-  } catch(e) {
-    document.getElementById('localVideo').style.display = 'none';
-  }
-  
-  setTimeout(() => {
-    document.getElementById('call-status-text').textContent = 'Em chamada';
-    startCallTimer();
-  }, 3000);
+  } catch(e) { document.getElementById('localVideo').style.display = 'none'; }
+  setTimeout(() => { document.getElementById('call-status-text').textContent = 'Em chamada'; startCallTimer(); }, 3000);
 };
 
 window.endCall = () => {
-  document.getElementById('video-call').classList.remove('active');
-  stopCallTimer();
+  document.getElementById('video-call').classList.remove('active'); stopCallTimer();
   if (localStream) { localStream.getTracks().forEach(t => t.stop()); localStream = null; }
-  if (peerConnection) { peerConnection.close(); peerConnection = null; }
-  document.getElementById('localVideo').srcObject = null; 
-  document.getElementById('remoteVideo').srcObject = null;
+  document.getElementById('localVideo').srcObject = null; document.getElementById('remoteVideo').srcObject = null;
 };
 
-window.toggleMute = () => {
-  muted = !muted;
-  if (localStream) localStream.getAudioTracks().forEach(t => t.enabled = !muted);
-  const btn = document.getElementById('btn-mute');
-  btn.classList.toggle('btn-active', muted);
-};
-
-window.toggleCamera = () => {
-  cameraOff = !cameraOff;
-  if (localStream) localStream.getVideoTracks().forEach(t => t.enabled = !cameraOff);
-  document.getElementById('btn-camera').classList.toggle('btn-active', cameraOff);
-};
+window.toggleMute = () => { muted = !muted; if (localStream) localStream.getAudioTracks().forEach(t => t.enabled = !muted); document.getElementById('btn-mute').classList.toggle('btn-active', muted); };
+window.toggleCamera = () => { cameraOff = !cameraOff; if (localStream) localStream.getVideoTracks().forEach(t => t.enabled = !cameraOff); document.getElementById('btn-camera').classList.toggle('btn-active', cameraOff); };
 
 function startCallTimer() {
   callSeconds = 0;
@@ -1444,38 +1584,17 @@ function startCallTimer() {
     document.getElementById('call-timer').textContent = `${m}:${s}`;
   }, 1000);
 }
-
-function stopCallTimer() {
-  clearInterval(callTimerInterval);
-  document.getElementById('call-timer').textContent = '00:00';
-}
-
+function stopCallTimer() { clearInterval(callTimerInterval); document.getElementById('call-timer').textContent = '00:00'; }
 window.rejectCall = () => { document.getElementById('incoming-call').classList.remove('active'); };
-window.acceptCall = async () => {
-  document.getElementById('incoming-call').classList.remove('active');
-  await startVideoCall();
-};
+window.acceptCall = async () => { document.getElementById('incoming-call').classList.remove('active'); await startVideoCall(); };
 
-// =================== NOTIFICATIONS ===================
 function showNotif(avatarSource, name, text, isPhoto = false) {
-  const n = document.createElement('div');
-  n.className = 'notification';
-  
-  const avatarStyle = isPhoto 
-    ? `background-image:url('${avatarSource}')` 
-    : `background:#555;`;
-    
-  n.innerHTML = `
-    <div class="notif-avatar" style="${avatarStyle}">${isPhoto ? '' : avatarSource}</div>
-    <div>
-      <div class="notif-name">${name}</div>
-      <div class="notif-text">${text}</div>
-    </div>`;
-  document.body.appendChild(n);
-  setTimeout(() => n.remove(), 4000);
+  const n = document.createElement('div'); n.className = 'notification';
+  const avatarStyle = isPhoto ? `background-image:url('${avatarSource}')` : `background:#555;`;
+  n.innerHTML = `<div class="notif-avatar" style="${avatarStyle}">${isPhoto ? '' : avatarSource}</div><div><div class="notif-name">${name}</div><div class="notif-text">${text}</div></div>`;
+  document.body.appendChild(n); setTimeout(() => n.remove(), 4000);
 }
 window.showNotif = showNotif;
-
 </script>
 </body>
 </html>
